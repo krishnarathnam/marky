@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+html,
+body,
+#root {
+    height: 100%;
+    overflow: hidden;
+    /* Prevent scrollbars on the whole window */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+  }
+  
+  .scrollbar-hide:hover::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+  }
+
+
+@theme {
+    --color-dark-charcoal: #1E1E1E;
+    --color-dark-gray: #252525;
+    --color-dim-gray: #757575;
+    --color-off-white: #f9f9f9;
+    --color-off-black: #555555;
+
+}
