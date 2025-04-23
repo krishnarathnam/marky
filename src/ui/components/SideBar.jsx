@@ -2,12 +2,10 @@ import Header from "./Header";
 import Files from "./Files";
 import { useState } from "react";
 const SideBar = () => {
-  const [indexs, setIndex] = useState(1)
+  const [indexs, setIndex] = useState('allnotes')
 
   function changeIndex(indi){
-      setIndex(indi);
-        console.log("Index changed")
-        console.log(indexs)
+        setIndex(indi);
   }
 
   return (

@@ -13,8 +13,8 @@ function App() {
       {/* <NotesBar /> */}
       <main className="flex-1 overflow-y-auto">
         <Routes>
-          <Route path='/home' element={<Home />}/>
-          <Route path='/Notes' element={<Notes />}/>
+          <Route path='/allnotes' element={<Home />}/>
+          <Route path='/pnotes' element={<Notes />}/>
         </Routes>
       </main>
     </div>
