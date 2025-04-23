@@ -1,20 +1,10 @@
 import React from 'react'
+import { Link } from 'react-router';
 
 export default function Files({changeIndex, indexs}) {
     const navItems = [
-        "Home",
-        "Quantum computing",
-        "Master",
-        "History",
-        "On Me",
-        "TKS",
-        "Dev/CS",
-        "Zap ⚡",
-        "Creative writing",
-        "All projects",
-        "Quantum computing",
-        "Quantum computing",
-        "Quantum computing",
+        "home",
+        "notes",
     ];
 
 
@@ -22,6 +12,7 @@ export default function Files({changeIndex, indexs}) {
         <div className="w-60 bg-off-white px-4 border-r overflow-y-auto ">
             <ul className="space-y-2">
                 {navItems.map((item, index) => (
+                    <Link to={item}>
                     <button
                         key={index}
                         className={`text-sm block w-full px-3 py-2 rounded-l cursor-pointer 
@@ -33,6 +24,7 @@ export default function Files({changeIndex, indexs}) {
                     >
                         {item}
                     </button>
+                    </Link>
                 ))}
             </ul>
         </div>
