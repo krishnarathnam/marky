@@ -9,9 +9,14 @@ const SideBar = () => {
   }
 
   return (
-    <aside className="h-screen w-55 overflow-hidden bg-off-white m-0">
+    <aside className="h-screen w-55 bg-off-white m-0">
       <Header />
-      <Files changeIndex={changeIndex} setIndex={setIndex} indexs={indexs}/>
+      <div className="flex flex-col h-full">
+        {/* Set the scrollable area for files */}
+        <div className="overflow-y-auto flex-1">
+          <Files />
+        </div>
+      </div>
     </aside>
   );
 };
