@@ -1,12 +1,6 @@
 import Header from "./Header";
 import Files from "./Files";
-import { useState } from "react";
-const SideBar = () => {
-  const [indexs, setIndex] = useState('allnotes')
-
-  function changeIndex(indi){
-        setIndex(indi);
-  }
+const SideBar = ({ openModal, setFolders, folders }) => {
 
   return (
     <aside className="h-screen w-55 bg-off-white m-0">
@@ -14,7 +8,7 @@ const SideBar = () => {
       <div className="flex flex-col h-full">
         {/* Set the scrollable area for files */}
         <div className="overflow-y-auto flex-1">
-          <Files />
+          <Files openModal={openModal} setFolders={setFolders} folders={folders} />
         </div>
       </div>
     </aside>

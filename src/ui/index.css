@@ -5,6 +5,7 @@ body,
 #root {
     height: 100%;
     overflow: hidden;
+    z-index: 0;
     /* Prevent scrollbars on the whole window */
 }
 

@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain, dialog } from "electron";
 // import path from "path";
 
 app.on("ready", () => {
@@ -9,4 +9,12 @@ app.on("ready", () => {
   });
   mainWindow.loadURL("http://localhost:5173");
   // mainWindow.loadFile(path.join(app.getAppPath(), "dist-react", "index.html"));
+});
+
+ipcMain.handle('dialog:openCreateFolder', async () => {
+  const result = await dialog.showInputBox({
+    title: 'New Folder Name',
+    prompt: 'Enter a name for the new folder:',
+  });
+  return result;
 });
