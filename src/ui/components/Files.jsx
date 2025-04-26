@@ -4,11 +4,11 @@ import { Folder, Star, Share2, Clock, Box, Hash, Plus } from "lucide-react";
 import Category from './Category'
 import Folders from './Folders'
 
-export default function Files({ openModal, setFolders, folders }) {
+export default function Files({ onDeleteFolder, openModal, setFolders, folders }) {
   return (
     <div className='w-full h-full space-y-6 text-sm '>
       <Category />
-      <Folders openModal={openModal} setFolders={setFolders} folders={folders} />
+      <Folders openModal={openModal} onDeleteFolder={onDeleteFolder} setFolders={setFolders} folders={folders} />
     </div>
   )
 }

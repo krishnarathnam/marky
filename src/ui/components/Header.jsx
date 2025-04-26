@@ -9,13 +9,11 @@ export default function Header() {
         try {
           const res = await fetch("https://thequoteshub.com/api/random-qoute");
           const data = await res.json();
-          console.log(data)
           if (data.text.length < 100) {
             setQoute({ qoute: data.text, author: data.author })
             return;
           } else {
             gotIt = false;
-            console.log("Text to long gang");
           }
         } catch (error) {
           console.error(error);

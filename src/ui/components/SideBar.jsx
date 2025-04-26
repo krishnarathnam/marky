@@ -1,6 +1,6 @@
 import Header from "./Header";
 import Files from "./Files";
-const SideBar = ({ openModal, setFolders, folders }) => {
+const SideBar = ({ onDeleteFolder, openModal, setFolders, folders }) => {
 
   return (
     <aside className="h-screen w-55 bg-off-white m-0">
@@ -8,7 +8,7 @@ const SideBar = ({ openModal, setFolders, folders }) => {
       <div className="flex flex-col h-full">
         {/* Set the scrollable area for files */}
         <div className="overflow-y-auto flex-1">
-          <Files openModal={openModal} setFolders={setFolders} folders={folders} />
+          <Files onDeleteFolder={onDeleteFolder} openModal={openModal} setFolders={setFolders} folders={folders} />
         </div>
       </div>
     </aside>

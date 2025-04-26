@@ -1,20 +1,123 @@
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
-// import path from "path";
+import { app, BrowserWindow, ipcMain } from 'electron';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import fs from 'fs-extra'; // fs-extra already supports promises
+import os from 'os';
 
-app.on("ready", () => {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const MARKY_FOLDER = path.join(os.homedir(), 'marky');
+
+function createWindow() {
+  // Log the preload path to verify it's correct
+  const preloadPath = path.resolve(__dirname, 'preload.js');
+  console.log('Looking for preload script at:', preloadPath);
+  console.log('File exists:', fs.existsSync(preloadPath));
+
   const mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
     autoHideMenuBar: true,
+    webPreferences: {
+      preload: preloadPath,
+      contextIsolation: true,
+      nodeIntegration: false
+    }
   });
+
   mainWindow.loadURL("http://localhost:5173");
-  // mainWindow.loadFile(path.join(app.getAppPath(), "dist-react", "index.html"));
+  mainWindow.webContents.openDevTools();
+}
+
+function ensureMarkyFolder() {
+  const homeDir = os.homedir();
+  const markyPath = path.join(homeDir, 'marky');
+  const welcomePath = path.join(markyPath, 'welcome');
+
+  fs.ensureDir(markyPath)
+    .then(() => {
+      console.log('Marky folder is ready at:', markyPath);
+    })
+    .catch((err) => {
+      console.error('Error creating Marky folder:', err);
+    });
+
+  fs.ensureDir(welcomePath)
+    .then(() => {
+      console.log('Welcome folder is ready at:', welcomePath);
+    })
+    .catch((err) => {
+      console.error('Error creating Welcome folder:', err);
+    });
+}
+
+// Add all IPC handlers before the app is ready
+ipcMain.handle('create-subfolder', async (event, folderName) => {
+  try {
+    const subfolderPath = path.join(MARKY_FOLDER, folderName);
+    await fs.ensureDir(subfolderPath);
+    return { success: true, path: subfolderPath };
+  } catch (error) {
+    console.error('Failed to create subfolder:', error);
+    return { success: false, error: error.message };
+  }
 });
 
-ipcMain.handle('dialog:openCreateFolder', async () => {
-  const result = await dialog.showInputBox({
-    title: 'New Folder Name',
-    prompt: 'Enter a name for the new folder:',
-  });
-  return result;
+ipcMain.handle('delete-folder', async (event, folderName) => {
+  try {
+    const folderPath = path.join(MARKY_FOLDER, folderName);
+    console.log(`Attempting to delete folder at: ${folderPath}`);
+
+    const exists = await fs.pathExists(folderPath);
+    if (!exists) {
+      console.log(`Folder does not exist: ${folderPath}`);
+      return { success: false, error: "Folder does not exist." };
+    }
+
+    await fs.remove(folderPath); // fs-extra's remove method
+    console.log(`Successfully deleted folder: ${folderPath}`);
+    return { success: true, path: folderPath };
+  } catch (error) {
+    console.error('Error deleting folder:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+ipcMain.handle('get-folders', async () => {
+  try {
+    console.log('Getting folders from:', MARKY_FOLDER);
+    // Use fs-extra's readdir which returns a promise
+    const files = await fs.readdir(MARKY_FOLDER);
+
+    // Process the files to find directories
+    const folders = [];
+    for (const file of files) {
+      const filePath = path.join(MARKY_FOLDER, file);
+      const stats = await fs.stat(filePath);
+      if (stats.isDirectory()) {
+        folders.push(file);
+      }
+    }
+
+    console.log('Found folders:', folders);
+    return folders;
+  } catch (error) {
+    console.error('Error reading folders:', error);
+    return [];
+  }
+});
+
+app.whenReady().then(() => {
+  ensureMarkyFolder();
+  createWindow();
+});
+
+app.on('window-all-closed', () => {
+  if (process.platform !== 'darwin') app.quit();
+});
+
+app.on('activate', () => {
+  if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
