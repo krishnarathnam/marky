@@ -8,18 +8,15 @@ const initialMarkdown = `# Markdown Editor for [React](https://facebook.github.i
 
 export default function MarkDownEditor() {
   const [value, setValue] = useState(initialMarkdown);
-  const [isPreview, setIsPreview] = useState(false);
-  const [isLive, setIsLive] = useState(false);
+  const [preview, setPreview] = useState('edit'); // initial state should be 'edit'
 
-  // Toggle Preview Mode
-  const togglePreviewMode = () => {
-    setIsPreview(!isPreview);
-  };
-
-  // Toggle Live Mode
-  const toggleLiveMode = () => {
-    setIsLive(!isLive);
-  };
+  function changePreview(mode) {
+    if (preview === 'edit') {
+      setPreview(mode); // Corrected to properly set preview state
+    } else {
+      setPreview('edit')
+    }
+  }
 
   return (
     <div className="h-screen flex flex-col">
@@ -27,7 +24,7 @@ export default function MarkDownEditor() {
       <div className="flex-1 overflow-hidden">
         <MDEditor
           height="100%" // Set height to 100% of the parent container
-          preview={isPreview ? 'preview' : 'edit'}
+          preview={preview}
           value={value}
           onChange={setValue}
           commandsFilter={(cmd) => {
@@ -45,14 +42,14 @@ export default function MarkDownEditor() {
       <div className="fixed bottom-5 right-5 flex flex-col items-center justify-center rounded-md bg-gray-100 border border-gray-300 cursor-pointer z-10">
         {/* Preview Button */}
         <div className="hover:bg-gray-200 m-2 border-b-1">
-          <button onClick={togglePreviewMode}>
+          <button onClick={() => changePreview('preview')}> {/* Corrected */}
             <Eye className="text-gray-700" size={19} />
           </button>
         </div>
 
         {/* Live Mode Button */}
         <div className="hover:bg-gray-200 m-1">
-          <button onClick={toggleLiveMode}>
+          <button onClick={() => changePreview('live')}> {/* Corrected */}
             <SquareSplitHorizontal size={19} className="text-gray-700" />
           </button>
         </div>

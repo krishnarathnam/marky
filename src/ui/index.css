@@ -21,15 +21,41 @@ body,
 ::-webkit-scrollbar-track {
   background: #fafafa;
 }
-
 ::-webkit-scrollbar-thumb {
-  background-color: #e0b34f;
+  background-color: #1E1E1E;
   border-radius: 10px;
   border: 2px solid #fafafa;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #c9982c;
+  background-color: #1E1E1E;
+}
+
+.markdown-preview h1 {
+  font-size: 2rem;
+  font-weight: bold;
+}
+.markdown-preview h2 {
+  font-size: 1.75rem;
+  font-weight: bold;
+}
+.markdown-preview h3 {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+.custom-md-editor .w-md-editor-toolbar {
+  background-color: #f9f9f9; /* Off-white for the toolbar */
+}
+
+.custom-md-editor strong {
+  background-color: #f9f9f9; /* Off-white for bold text highlight */
+  color: inherit; /* Keep original text color */
+}
+
+.custom-md-editor .w-md-preview strong,
+.custom-md-editor .w-md-live-mode strong {
+  background-color: #f9f9f9;  /* Off-white for bold in preview and live modes */
+  color: inherit;
 }
 
 @theme {
