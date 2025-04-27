@@ -1,11 +1,23 @@
 import React from "react";
+import SearchBar from "./SearchBar";
+import Notes from "./Notes";
 
 export default function NotesBar() {
   return (
-    <div className="flex h-full">
-      <div className={`bg-white w-65 text-white transition-all p-4 pb-4`}>
-        <h1>Notes Section</h1>
+    <div className="bg-gray-50 border-[#d0cfcf] border-l-1 border-r-1 w-65 flex flex-col max-h-screen">
+      <SearchBar />
+      <div className="overflow-y-auto mt-1">
+        <Notes />
+        <Notes />
+        <Notes />
+        <Notes />
+        <Notes />
+        <Notes />
+        <Notes />
+        <Notes />
+        <Notes />
       </div>
+
     </div>
   );
 }

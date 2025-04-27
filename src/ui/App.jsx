@@ -2,14 +2,14 @@ import React, { useEffect, useState } from "react";
 import SideBar from "./components/SideBar";
 import PromptFolder from "./components/PromptFolder";
 import Home from "./components/Home";
-import NotesBar from "./components/NotesBar";
+import Editor from "./components/Editor";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
   const [modalOpen, setModalOpen] = useState(false);
   const [folders, setFolders] = useState([]);
   const [folderName, setFolderName] = useState('Default');
-
+  const [linkFolderName, setLinkFolderName] = useState('')
   async function createNewFolder() {
     try {
       const response = await window.electron.createSubfolder(folderName);
@@ -67,14 +67,13 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="flex h-screen bg-neutral-900">
+      <div className="flex h-screen bg-white">
         {modalOpen && <PromptFolder setFolderName={setFolderName} closeModal={closeModal} createNewFolder={createNewFolder} />}
         <SideBar onDeleteFolder={onDeleteFolder} openModal={openModal} setFolders={setFolders} folders={folders} />
-        <NotesBar />
         <main className="flex-1 overflow-y-auto">
           <Routes>
-            <Route path='/category/:name' element={<Home />} />
-            <Route path='/folder/:name' element={<div>welcome to folder</div>} />
+            <Route path='/category/:categoryName' element={<Home />} />
+            <Route path='/folder/:LinkFolderName' element={<Editor />} />
           </Routes>
         </main>
       </div>

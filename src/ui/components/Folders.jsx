@@ -2,7 +2,7 @@ import React from 'react';
 import SideBarFolder from './SideBarFolder';
 import { Folder } from 'lucide-react';  // Assuming you're using react-icons for the Folder icon
 
-export default function Folders({ onDeleteFolder, openModal, setFolders, folders }) {
+export default function Folders({ onDeleteFolder, openModal, folders }) {
 
   return (
     <div>

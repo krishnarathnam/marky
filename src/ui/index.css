@@ -9,20 +9,28 @@ body,
     /* Prevent scrollbars on the whole window */
 }
 
-.scrollbar-hide::-webkit-scrollbar {
-    width: 0px;
-    background: transparent;
-  }
-  
-  .scrollbar-hide:hover::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  .scrollbar-hide::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.2);
-    border-radius: 10px;
-  }
+/* Hide the preview toggle button */
+.md-editor-toolbar .md-editor-preview-btn {
+  display: none;
+}
 
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #fafafa;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #e0b34f;
+  border-radius: 10px;
+  border: 2px solid #fafafa;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #c9982c;
+}
 
 @theme {
     --color-dark-charcoal: #1E1E1E;
@@ -30,5 +38,5 @@ body,
     --color-dim-gray: #757575;
     --color-off-white: #f9f9f9;
     --color-off-black: #555555;
-
+    --color-dark-blue: #131826;
 }
