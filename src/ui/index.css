@@ -6,12 +6,11 @@ body,
     height: 100%;
     overflow: hidden;
     z-index: 0;
-    /* Prevent scrollbars on the whole window */
 }
 
 /* Hide the preview toggle button */
-.md-editor-toolbar .md-editor-preview-btn {
-  display: none;
+.CodeMirror .CodeMirror-scroll{
+    min-height: 90vh !important;
 }
 
 ::-webkit-scrollbar {
