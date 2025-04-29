@@ -23,7 +23,7 @@ export default function Folders({ onDeleteFolder, openModal, folders }) {
           );
         })}
       </div>
-      <button className="hover:font-bold text-dim-gray text-sm ml-6 mt-1" onClick={openModal}>+ new folder</button>
+      <button className="hover:font-bold text-dim-gray text-sm ml-6 mt-1" onClick={() => openModal('folder')}>+ new folder</button>
     </div>
   );
 }

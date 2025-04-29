@@ -6,13 +6,43 @@ body,
     height: 100%;
     overflow: hidden;
     z-index: 0;
+    margin: 0;
+    padding: 0;
 }
 
-/* Hide the preview toggle button */
-.CodeMirror .CodeMirror-scroll{
-    min-height: 90vh !important;
+/* Enhanced list styling */
+.wmde-markdown ul,
+.w-md-editor-preview ul,
+.markdown-body ul {
+  list-style-type: disc !important;
+  padding-left: 2em !important;
+  margin-top: 1em !important;
+  margin-bottom: 1em !important;
 }
 
+.wmde-markdown ol,
+.w-md-editor-preview ol,
+.markdown-body ol {
+  list-style-type: decimal !important;
+  padding-left: 2em !important;
+  margin-top: 1em !important;
+  margin-bottom: 1em !important;
+}
+
+.wmde-markdown li,
+.w-md-editor-preview li,
+.markdown-body li {
+  margin-bottom: 0.5em !important;
+  display: list-item !important;
+}
+
+.wmde-markdown li::marker,
+.w-md-editor-preview li::marker,
+.markdown-body li::marker {
+  color: var(--color-dim-gray);
+}
+
+/* Keep your existing styles */
 ::-webkit-scrollbar {
   width: 10px;
 }
@@ -20,6 +50,7 @@ body,
 ::-webkit-scrollbar-track {
   background: #fafafa;
 }
+
 ::-webkit-scrollbar-thumb {
   background-color: #1E1E1E;
   border-radius: 10px;
@@ -28,33 +59,6 @@ body,
 
 ::-webkit-scrollbar-thumb:hover {
   background-color: #1E1E1E;
-}
-
-.markdown-preview h1 {
-  font-size: 2rem;
-  font-weight: bold;
-}
-.markdown-preview h2 {
-  font-size: 1.75rem;
-  font-weight: bold;
-}
-.markdown-preview h3 {
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-.custom-md-editor .w-md-editor-toolbar {
-  background-color: #f9f9f9; /* Off-white for the toolbar */
-}
-
-.custom-md-editor strong {
-  background-color: #f9f9f9; /* Off-white for bold text highlight */
-  color: inherit; /* Keep original text color */
-}
-
-.custom-md-editor .w-md-preview strong,
-.custom-md-editor .w-md-live-mode strong {
-  background-color: #f9f9f9;  /* Off-white for bold in preview and live modes */
-  color: inherit;
 }
 
 @theme {

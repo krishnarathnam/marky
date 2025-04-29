@@ -1,38 +1,15 @@
-import React, { useEffect, useState } from "react";
+import { Settings } from 'lucide-react'
+
 export default function Header() {
-  const [qoute, setQoute] = useState({})
-
-  useEffect(() => {
-    const fetchQoutes = async () => {
-      let gotIt = false
-      while (!gotIt) {
-        try {
-          const res = await fetch("https://thequoteshub.com/api/random-qoute");
-          const data = await res.json();
-          if (data.text.length < 100) {
-            setQoute({ qoute: data.text, author: data.author })
-            return;
-          } else {
-            gotIt = false;
-          }
-        } catch (error) {
-          console.error(error);
-          return;
-        }
-      }
-    }
-
-    fetchQoutes();
-  }, []);
 
   return (
-    <nav className="border-b-1 border-[#d0cfcf] h-50 flex flex-col mb-5">
-      <div className="flex justify-between items-center">
-        <div className="p-4 pt-6 pb-4 flex flex-col">
-          <img src="https://picsum.photos/200" className="h-15 w-15 rounded-full" />
-          <p className="text-xs pt-5 text-dim-gray">{qoute.qoute}</p>
-          <p className="text-xs text-off-black font-bold pt-2">- {qoute.author}</p>
+    <nav className="border-b-1 border-[#d0cfcf] rounded-md shadow-2xs flex flex-col mb-5">
+      <div className="flex justify-between p-3 pb-5 mt-2 items-center">
+        <div>
+          <h3 className='font-bold text-dim-gray text-m'>Krishna Rathnam</h3>
+          <p className='text-xs text-dim-gray'>Last worked at 10:22:23</p>
         </div>
+        <Settings size={18} className='text-dim-gray' />
       </div>
     </nav>
   );

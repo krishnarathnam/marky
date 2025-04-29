@@ -2,7 +2,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
-import fs from 'fs-extra'; // fs-extra already supports promises
+import fs from 'fs-extra';
 import os from 'os';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -106,6 +106,85 @@ ipcMain.handle('get-folders', async () => {
   } catch (error) {
     console.error('Error reading folders:', error);
     return [];
+  }
+});
+
+
+ipcMain.handle('get-notes', async (event, folderName) => {
+  try {
+    const folderPath = path.join(MARKY_FOLDER, folderName);
+
+    const files = await fs.readdir(folderPath);
+
+    const notes = files.filter((fileName) => fileName.endsWith('.md'));
+
+    console.log('Notes found:', notes);
+    return notes;
+  } catch (error) {
+    console.error('Error fetching notes:', error);
+    return [];
+  }
+});
+
+ipcMain.handle('read-notes', async (event, folderName, noteName) => {
+
+  try {
+
+    const folderPath = path.join(MARKY_FOLDER, folderName);
+    const notePath = path.join(folderPath, noteName)
+    const [noteContent, stat] = await Promise.all([
+      fs.readFile(notePath, { encoding: 'utf8', flag: 'r' }),
+      fs.stat(notePath)
+    ]);
+
+    const lastModified = stat.mtime.toLocaleString('en-GB', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).replace(',', '');
+
+    return {
+
+      content: noteContent,
+      lastModified,
+    };
+  } catch (error) {
+    console.error('Error reading note:', error)
+  }
+})
+
+ipcMain.handle('write-notes', async (event, folderName, noteName, content) => {
+  try {
+    const folderPath = path.join(MARKY_FOLDER, folderName);
+    const notePath = path.join(folderPath, noteName);
+
+    await fs.writeFile(notePath, content, { encoding: 'utf8' });
+
+    console.log(`Note written successfully: ${notePath}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Error writing note:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+
+ipcMain.handle('create-notes', async (event, folderName, noteName) => {
+  try {
+    const folderPath = path.join(MARKY_FOLDER, folderName);
+    const noteFileName = noteName.endsWith('.md') ? noteName : `${noteName}.md`;
+    const notePath = path.join(folderPath, noteFileName);
+
+    await fs.writeFile(notePath, `# ${noteName.replace('.md', '')}`, { encoding: 'utf8' });
+
+    console.log('Created new Note:', notePath);
+    return { success: true };
+  } catch (error) {
+    console.error('Error creating note:', error);
+    return { success: false, error: error.message };
   }
 });
 
