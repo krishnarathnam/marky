@@ -84,15 +84,7 @@ ipcMain.handle('get-all-notes', async () => {
           if (fileStats.isFile() && filePath.endsWith('.md')) {
             const content = await fs.readFile(filePath, 'utf8');
 
-            const lastModified = fileStats.mtime.toLocaleString('en-GB', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: false,
-            }).replace(',', '');
-
+            const lastModified = fileStats.mtime.toLocaleString();
             notes.push({
               name: path.basename(filePath),
               content,
@@ -188,15 +180,7 @@ ipcMain.handle('read-notes', async (event, folderName, noteName) => {
       fs.stat(notePath)
     ]);
 
-    const lastModified = stat.mtime.toLocaleString('en-GB', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }).replace(',', '');
-
+    const lastModified = stat.mtime.toLocaleString()
     return {
 
       content: noteContent,
