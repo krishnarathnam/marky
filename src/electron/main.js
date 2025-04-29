@@ -34,7 +34,7 @@ function createWindow() {
 function ensureMarkyFolder() {
   const homeDir = os.homedir();
   const markyPath = path.join(homeDir, 'marky');
-  const welcomePath = path.join(markyPath, 'welcome');
+  const welcomePath = path.join(markyPath, 'Welcome');
 
   fs.ensureDir(markyPath)
     .then(() => {
@@ -64,6 +64,57 @@ ipcMain.handle('create-subfolder', async (event, folderName) => {
     return { success: false, error: error.message };
   }
 });
+
+ipcMain.handle('get-all-notes', async () => {
+  let notes = [];
+  try {
+    const folderPath = path.join(MARKY_FOLDER);
+    const folders = await fs.readdir(folderPath);
+
+    const getNotesFromFolder = async (folder) => {
+      const folderFullPath = path.join(folderPath, folder);
+      const stats = await fs.stat(folderFullPath);
+
+      if (stats.isDirectory()) {
+        const files = await fs.readdir(folderFullPath);
+        for (const file of files) {
+          const filePath = path.join(folderFullPath, file);
+          const fileStats = await fs.stat(filePath);
+
+          if (fileStats.isFile() && filePath.endsWith('.md')) {
+            const content = await fs.readFile(filePath, 'utf8');
+
+            const lastModified = fileStats.mtime.toLocaleString('en-GB', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: false,
+            }).replace(',', '');
+
+            notes.push({
+              name: path.basename(filePath),
+              content,
+              lastModified,
+            });
+          }
+        }
+      }
+    };
+
+    for (const folder of folders) {
+      await getNotesFromFolder(folder);
+    }
+
+    console.log('Notes found:', notes);
+    return notes;
+  } catch (error) {
+    console.error('Error getting all notes:', error);
+    return [];
+  }
+});
+
 
 ipcMain.handle('delete-folder', async (event, folderName) => {
   try {
@@ -188,7 +239,38 @@ ipcMain.handle('create-notes', async (event, folderName, noteName) => {
   }
 });
 
-app.whenReady().then(() => {
+ipcMain.handle('delete-notes', async (event, folderName, noteName) => {
+  try {
+    const folderPath = path.join(MARKY_FOLDER, folderName);
+    const notePath = path.join(folderPath, noteName);
+
+    await fs.unlink(notePath);
+
+    console.log("Deleted note:", noteName);
+    return { success: true };
+  } catch (error) {
+    console.error('Error deleting note:', error)
+    return { success: false, error: error.message };
+  }
+})
+
+ipcMain.handle('rename-notes', async (event, folderName, noteName, newNoteName) => {
+  try {
+    const folderPath = path.join(MARKY_FOLDER, folderName);
+    const oldPath = path.join(folderPath, noteName);
+    const newFileName = newNoteName.endsWith('.md') ? newNoteName : `${newNoteName}.md`;
+    const newPath = path.join(folderPath, newFileName);
+
+    await fs.rename(oldPath, newPath);
+
+    console.log('Renamed note:', oldPath, 'to', newPath);
+    return { success: true };
+  } catch (error) {
+    console.error("Error renaming note: ", error);
+    return { success: false, error: error.message };
+  }
+}); app.whenReady().then(() => {
+
   ensureMarkyFolder();
   createWindow();
 });

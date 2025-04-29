@@ -3,7 +3,7 @@ import SideBar from "./components/SideBar";
 import PromptFolder from "./components/PromptFolder";
 import Home from "./components/Home";
 import Editor from "./components/Editor";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 
 function App() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -13,12 +13,18 @@ function App() {
   const [notes, setNotes] = useState([])
   const [noteName, setNoteName] = useState('')
   const [modalType, setModalType] = useState('folder');
+  const [allNotes, setAllNotes] = useState([]);
 
+  const recentNotes = [...allNotes].sort((a, b) => {
+    const aDate = new Date(a.lastModified);
+    const bDate = new Date(b.lastModified);
+
+    return aDate - bDate;
+  });
   async function createNewFolder() {
     try {
       const response = await window.electron.createSubfolder(folderName);
       if (response.success) {
-        // Refresh folders after creating a new one
         fetchFolders();
         setModalOpen(false)
         console.log(folders)
@@ -31,14 +37,15 @@ function App() {
     }
   }
 
+
+
   async function onDeleteFolder(folderName) {
-    // Call the Electron delete API
-    console.log("Deleting folder:", folderName);  // Log the folderName to see if it's correct
+    console.log("Deleting folder:", folderName);
     try {
       const response = await window.electron.deleteFolder(folderName);
       if (response.success) {
         alert(`Folder "${folderName}" deleted.`);
-        fetchFolders(); // Refresh the folder list after deletion
+        fetchFolders();
       } else {
         alert(`Error: ${response.error}`);
       }
@@ -73,7 +80,7 @@ function App() {
       );
 
       console.log('Loaded notes:', notesData);
-      setNotes(notesData); // save {name, content} for each note
+      setNotes(notesData);
     } catch (error) {
       console.error('Error fetching notes:', error);
     }
@@ -107,6 +114,35 @@ function App() {
       alert(`Error creating note: ${error.message}`);
     }
   }
+
+  async function deleteNote(noteName) {
+    try {
+      const response = await window.electron.deleteNote(linkFolderName, noteName);
+      if (response.success) {
+        fetchNotes();
+      } else {
+        alert(`Error: ${response.error}`);
+      }
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      alert(`Error deleting note: ${error.message}`);
+    }
+  }
+
+  async function renameNote(noteName, newNoteName) {
+    try {
+      const response = await window.electron.renameNote(linkFolderName, noteName, newNoteName);
+      if (response.success) {
+        fetchNotes();
+      } else {
+        alert(`Error: ${response.error}`);
+      }
+    } catch (error) {
+      console.error("Error deleting note:", error);
+      alert(`Error deleting note: ${error.message}`);
+    }
+  }
+
   useEffect(() => {
     fetchNotes();
   }, [linkFolderName]);
@@ -126,22 +162,28 @@ function App() {
     setModalOpen(false);
   }
 
+
+  console.log('all notes', allNotes)
+  console.log('recent notes', recentNotes)
+
+
   return (
     <BrowserRouter>
       <div className="flex h-screen bg-white">
         {modalOpen &&
           <PromptFolder
-            type={modalType} // Pass modal type ('folder' or 'note')
-            setName={modalType === 'folder' ? setFolderName : setNoteName} // Set the appropriate state function for folder or note
+            type={modalType}
+            setName={modalType === 'folder' ? setFolderName : setNoteName}
             closeModal={closeModal}
-            createItem={modalType === 'folder' ? createNewFolder : createNewNote} // Call the respective create function
+            createItem={modalType === 'folder' ? createNewFolder : createNewNote}
           />
         }
         <SideBar onDeleteFolder={onDeleteFolder} openModal={openModal} setFolders={setFolders} folders={folders} />
         <main className="flex-1 overflow-y-auto">
           <Routes>
-            <Route path='/category/:categoryName' element={<Home />} />
-            <Route path='/folder/:LinkFolderName' element={<Editor openModal={openModal} onSaveNote={saveNote} notes={notes} setLinkFolderName={setLinkFolderName} />} />
+            <Route path='/category/recent' element={<Editor setAllNotes={setAllNotes} onRenameNote={renameNote} onDeleteNote={deleteNote} openModal={openModal} notes={recentNotes} onSaveNote={saveNote} setLinkFolderName={setLinkFolderName} />} />
+            <Route path='/category/all' element={<Editor setAllNotes={setAllNotes} onRenameNote={renameNote} onDeleteNote={deleteNote} openModal={openModal} notes={allNotes} onSaveNote={saveNote} setLinkFolderName={setLinkFolderName} />} />
+            <Route path='/folder/:LinkFolderName' element={<Editor onRenameNote={renameNote} onDeleteNote={deleteNote} openModal={openModal} onSaveNote={saveNote} notes={notes} setLinkFolderName={setLinkFolderName} />} />
           </Routes>
         </main>
       </div>

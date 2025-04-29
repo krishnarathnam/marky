@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "description": "Marky - simple note-taking app with markdown.",
   "author": "Krishna Rathnam",
-  "license": "MIT"
+  "license": "MIT",
   "type": "module",
   "main": "src/electron/main",
   "scripts": {

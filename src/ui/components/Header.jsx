@@ -3,7 +3,7 @@ import { Settings } from 'lucide-react'
 export default function Header() {
 
   return (
-    <nav className="border-b-1 border-[#d0cfcf] rounded-md shadow-2xs flex flex-col mb-5">
+    <nav className="border-b-1 border-[#d0cfcf] rounded-xs shadow-2xs flex flex-col mb-5">
       <div className="flex justify-between p-3 pb-5 mt-2 items-center">
         <div>
           <h3 className='font-bold text-dim-gray text-m'>Krishna Rathnam</h3>

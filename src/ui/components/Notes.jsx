@@ -1,25 +1,94 @@
-export default function Notes({ note, index, onSelectedNote }) {
+import { Ellipsis, X, Trash2, Folder, Star, FolderPen } from 'lucide-react';
+import { useState } from 'react';
+
+export default function Notes({ onRenameNote, onDeleteNote, note, index, onSelectedNote, isToolbarOpen, onToggleToolbar }) {
+  const [renameModal, setRenameModal] = useState(false)
+  const [renameName, setRenameName] = useState('Default')
+
+  function openModal() {
+    setRenameModal(true)
+  }
+
+  function closeModal() {
+    setRenameModal(false)
+  }
+
+  function HandleRename() {
+    const safeNewName = renameName.endsWith('.md') ? renameName : `${renameName}.md`;
+    onRenameNote(note.name, safeNewName);
+    closeModal();
+  }
 
   function stripMarkdown(text) {
     return text
-      .replace(/[#_*`>~-]/g, '') // Remove common markdown symbols
-      .replace(/\[(.*?)\]\(.*?\)/g, '$1') // Replace [text](link) with just text
-      .replace(/!\[(.*?)\]\(.*?\)/g, '$1') // Replace ![alt](img) with alt
-      .replace(/^\s*>+/gm, '') // Remove blockquotes
-      .replace(/^\s*([-*]|\d+\.)\s+/gm, '') // Remove list bullets
+      .replace(/[#_*`>~-]/g, '')
+      .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+      .replace(/!\[(.*?)\]\(.*?\)/g, '$1')
+      .replace(/^\s*>+/gm, '')
+      .replace(/^\s*([-*]|\d+\.)\s+/gm, '')
       .trim();
   }
+
   return (
-    <div key={index} className="p-2 flex flex-col w-full hover:bg-gray-200 transition bg-gray-50 border-[#d0cfcf] border-b-1" onClick={() => onSelectedNote(note)}>
-      <div className="transition backdrop-blur-sm">
-        <div className="text-xs text-gray-400 mb-2">Last modified: {note.lastModified}</div>
+    <div
+      className="relative p-2 flex flex-col w-full hover:bg-gray-200 transition bg-gray-50 border-[#d0cfcf] border-b-1"
+      onClick={() => onSelectedNote(note)}
+    >
+      <div>
+        <div className="text-xs flex justify-between text-gray-400 mb-2">
+          <div>Last modified: {note.lastModified}</div>
+          <button className="text-gray-700" onClick={onToggleToolbar}>
+            <Ellipsis size={17} />
+          </button>
+        </div>
         <div className="text-base font-semibold text-gray-700">
           {note.name.replace('.md', '')}
         </div>
-        <div className="text-sm text-gray-500 y- pt-1.5 truncate">
+        <div className="text-sm text-gray-500 pt-1.5 truncate">
           {stripMarkdown(note.content).slice(0, 50)}
         </div>
       </div>
+
+      {isToolbarOpen && (
+        <div
+          className="absolute right-4 top-8 z-20 bg-white border rounded shadow-md w-48 p-2"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex justify-between items-center mb-2">
+            <span className="font-semibold text-sm text-gray-600">Options</span>
+            <button onClick={onToggleToolbar}>
+              <X size={16} />
+            </button>
+          </div>
+          <button onClick={() => onDeleteNote(note.name)} className="flex items-center gap-2 text-sm text-red-600 hover:bg-gray-100 p-2 rounded w-full">
+            <Trash2 size={16} /> Delete
+          </button>
+          {/*<button className="flex items-center gap-2 text-sm text-gray-800 hover:bg-gray-100 p-2 rounded w-full">
+            <Folder size={16} /> Move to Folder
+          </button>*/}
+          <button className="flex items-center gap-2 text-sm text-yellow-600 hover:bg-gray-100 p-2 rounded w-full">
+            <Star size={16} /> Star
+          </button>
+          {!renameModal ? (
+            <button
+              onClick={openModal}
+              className="flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-100 px-3 py-2 rounded w-full transition"
+            >
+              <FolderPen size={16} /> Rename
+            </button>
+          ) : (
+            <div className="bg-white w-full px-2 py-1">
+              <input
+                type="text"
+                placeholder="New name"
+                className="w-full text-sm rounded border border-gray-300 p-1 outline-none bg-transparent"
+                onChange={(e) => setRenameName(e.target.value)}
+              />
+              <button onClick={HandleRename} className='bg-blue-600 w-full text-sm rounded mt-1 text-white p-1 '>Rename</button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

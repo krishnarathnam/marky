@@ -1,6 +1,5 @@
 import React from 'react'
-import { NavLink } from 'react-router';
-import { Folder, Star, Share2, Clock, Box, Hash, Plus, Bookmark } from "lucide-react";
+import { Star, Clock, Box, Bookmark } from "lucide-react";
 import SidebarLink from './SidebarLink'
 
 export default function Category() {
