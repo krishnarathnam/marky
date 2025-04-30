@@ -1,28 +1,37 @@
 {
   "name": "marky",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Marky - simple note-taking app with markdown.",
   "author": "Krishna Rathnam",
   "license": "MIT",
   "type": "module",
-  "main": "src/electron/main",
+  "main": "src/electron/main.js",
   "scripts": {
     "dev": "concurrently -k -r \"npm run dev:react\" \"npm run dev:electron\"",
     "dev:react": "vite",
     "dev:electron": "wait-on http://localhost:5173 && cross-env ELECTRON_DISABLE_SECURITY_WARNINGS=true electron .",
     "build": "vite build",
     "lint": "eslint .",
+    "dist": "npm run build && electron-builder",
     "preview": "vite preview"
+  },
+  "build": {
+    "appId": "com.krishna.marky",
+    "files": [
+      "dist-react/**",
+      "src/electron/**"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    }
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.4",
     "@uiw/react-markdown-editor": "^6.1.2",
     "@uiw/react-md-editor": "^4.0.5",
-    "crypto": "^1.0.1",
     "lucide-react": "^0.501.0",
     "mermaid": "^11.6.0",
-    "npx": "^10.2.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router": "^7.5.1",
@@ -38,6 +47,7 @@
     "concurrently": "^9.1.2",
     "cross-env": "^7.0.3",
     "electron": "^35.2.0",
+    "electron-builder": "^26.0.12",
     "electron-vite": "^3.1.0",
     "eslint": "^9.22.0",
     "eslint-plugin-react-hooks": "^5.2.0",

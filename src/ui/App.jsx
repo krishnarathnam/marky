@@ -19,7 +19,7 @@ function App() {
     const aDate = new Date(a.lastModified);
     const bDate = new Date(b.lastModified);
 
-    return aDate - bDate;
+    return bDate - aDate;
   });
   async function createNewFolder() {
     try {
@@ -169,7 +169,7 @@ function App() {
 
   return (
     <BrowserRouter>
-      <div className="flex h-screen bg-white">
+      <div className="flex h-screen">
         {modalOpen &&
           <PromptFolder
             type={modalType}

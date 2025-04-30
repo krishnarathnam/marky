@@ -31,20 +31,20 @@ export default function Notes({ onRenameNote, onDeleteNote, note, index, onSelec
 
   return (
     <div
-      className="relative p-2 flex flex-col w-full hover:bg-gray-200 transition bg-gray-50 border-[#d0cfcf] border-b-1"
+      className="relative p-2 flex flex-col w-full hover:bg-gray-200 transition border-border border-b-1"
       onClick={() => onSelectedNote(note)}
     >
       <div>
-        <div className="text-xs flex justify-between text-gray-400 mb-2">
+        <div className="text-xs flex justify-between ext-blue-950 text-note-teriary mb-2">
           <div>Last modified: {note.lastModified}</div>
           <button className="text-gray-700" onClick={onToggleToolbar}>
             <Ellipsis size={17} />
           </button>
         </div>
-        <div className="text-base font-semibold text-gray-700">
+        <div className="text-base font-semibold text-note-primary">
           {note.name.replace('.md', '')}
         </div>
-        <div className="text-sm text-gray-500 pt-1.5 truncate">
+        <div className="text-sm  text-note-secondary pt-1.5 truncate">
           {stripMarkdown(note.content).slice(0, 50)}
         </div>
       </div>

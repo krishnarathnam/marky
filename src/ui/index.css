@@ -62,10 +62,12 @@ body,
 }
 
 @theme {
-    --color-dark-charcoal: #1E1E1E;
-    --color-dark-gray: #252525;
-    --color-dim-gray: #757575;
-    --color-off-white: #f9f9f9;
-    --color-off-black: #555555;
     --color-dark-blue: #131826;
+    --color-darker-blue: #040711;
+    --color-border: #d0cfcf;
+    --color-sidebar-text: #DEDEDE;
+    --color-notebar: #FAFAFA;
+    --color-note-primary: #2e2e2e;
+    --color-note-secondary: #505050;
+    --color-note-teriary: #a1a1aa;
 }

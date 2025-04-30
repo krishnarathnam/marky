@@ -6,7 +6,7 @@ export default function Folders({ onDeleteFolder, openModal, folders }) {
 
   return (
     <div>
-      <h3 className="uppercase ml-3 font-bold text-dim-gray text-sm mb-2">
+      <h3 className="uppercase ml-3 font-bold  text-sm mb-2">
         <span>📂</span> Folders
       </h3>
       <div className="ml-6 space-y-2 max-h-[calc(100vh-500px)] overflow-y-auto">
@@ -23,7 +23,7 @@ export default function Folders({ onDeleteFolder, openModal, folders }) {
           );
         })}
       </div>
-      <button className="hover:font-bold text-dim-gray text-sm ml-6 mt-1" onClick={() => openModal('folder')}>+ new folder</button>
+      <button className="hover:font-bold  text-sm ml-6 mt-1" onClick={() => openModal('folder')}>+ new folder</button>
     </div>
   );
 }

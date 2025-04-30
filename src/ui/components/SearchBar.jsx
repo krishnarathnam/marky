@@ -3,15 +3,15 @@ import { Edit, ArrowDownAZ } from 'lucide-react';
 
 export default function SearchBar({ openModal }) {
   return (
-    <div className="m-2">
+    <div className="m-2 mb-0.5">
       <div className="h-5 w-full justify-between flex items-center">
-        <ArrowDownAZ size={20} />
-        <h2>All Notes</h2>
+        <ArrowDownAZ size={20} className='text-note-primary' />
+        <h2 className='text-note-primary font-semibold'>All Notes</h2>
         <button onClick={() => openModal('note')}> {/* Open modal for creating note */}
-          <Edit size={20} />
+          <Edit size={20} className='text-note-primary' />
         </button>
       </div>
-      <div className="h-14 w-full flex items-center border-b border-[#d0cfcf]">
+      <div className="h-14 w-full flex items-center ">
         <input
           type="text"
           placeholder="Search...."

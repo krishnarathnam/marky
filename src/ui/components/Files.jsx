@@ -1,6 +1,4 @@
 import React from 'react'
-import { NavLink } from 'react-router';
-import { Folder, Star, Share2, Clock, Box, Hash, Plus } from "lucide-react";
 import Category from './Category'
 import Folders from './Folders'
 
