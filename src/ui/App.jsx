@@ -15,12 +15,28 @@ function App() {
   const [modalType, setModalType] = useState('folder');
   const [allNotes, setAllNotes] = useState([]);
 
+<<<<<<< HEAD
   const recentNotes = [...allNotes].sort((a, b) => {
     const aDate = new Date(a.lastModified);
     const bDate = new Date(b.lastModified);
 
     return bDate - aDate;
   });
+=======
+  const recentNotes = [...allNotes]
+    .sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified))
+    .map(note => ({
+      ...note,
+      formattedDate: new Date(note.lastModified).toLocaleString('en-GB', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }).replace(',', ''),
+    }));
+>>>>>>> 6f5e63c99204b1f16c444ad8c4df16ef559ae988
   async function createNewFolder() {
     try {
       const response = await window.electron.createSubfolder(folderName);
