@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Cal+Sans&display=swap');
 
 html,
 body,
@@ -9,7 +10,21 @@ body,
     margin: 0;
     padding: 0;
 }
-
+.color-empty {
+  fill: #ebedf0;
+}
+.color-github-1 {
+  fill: #c6e48b;
+}
+.color-github-2 {
+  fill: #7bc96f;
+}
+.color-github-3 {
+  fill: #239a3b;
+}
+.color-github-4 {
+  fill: #196127;
+}
 /* Enhanced list styling */
 .wmde-markdown ul,
 .w-md-editor-preview ul,
@@ -42,7 +57,6 @@ body,
   color: var(--color-dim-gray);
 }
 
-/* Keep your existing styles */
 ::-webkit-scrollbar {
   width: 10px;
 }
@@ -61,6 +75,18 @@ body,
   background-color: #1E1E1E;
 }
 
+.scrollbar-visible::-webkit-scrollbar {
+  width: 10px;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  width: 0;
+}
+
+.scrollbar-visible::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
 @theme {
     --color-dark-blue: #131826;
     --color-darker-blue: #040711;
@@ -69,5 +95,6 @@ body,
     --color-notebar: #FAFAFA;
     --color-note-primary: #2e2e2e;
     --color-note-secondary: #505050;
+
     --color-note-teriary: #a1a1aa;
 }

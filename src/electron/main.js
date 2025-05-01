@@ -4,11 +4,14 @@ import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import fs from 'fs-extra';
 import os from 'os';
+import matter from 'gray-matter';
+import Store from 'electron-store'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const MARKY_FOLDER = path.join(os.homedir(), 'marky');
+const store = new Store();
 
 function createWindow() {
   // Log the preload path to verify it's correct
@@ -26,9 +29,29 @@ function createWindow() {
       nodeIntegration: false
     }
   });
+  if (app.isPackaged) {
+    mainWindow.loadFile(path.join(process.resourcesPath, 'app.asar', 'dist-react', 'index.html'));
+  } else {
+    mainWindow.loadURL('http://localhost:5173');
+  }
 
-  mainWindow.loadURL('http://localhost:5173');
+  const username = store.get('username');
+  if (!username) {
+    mainWindow.webContents.once('did-finish-load', () => {
+      mainWindow.webContents.send('show-username-prompt');
+    });
+  }
+
 }
+
+ipcMain.handle('save-username', async (event, username) => {
+  store.set('username', username);
+  return { success: true };
+});
+
+ipcMain.handle('get-username', async () => {
+  return store.get('username') || null;
+});
 
 function ensureMarkyFolder() {
   const homeDir = os.homedir();
@@ -81,13 +104,17 @@ ipcMain.handle('get-all-notes', async () => {
           const fileStats = await fs.stat(filePath);
 
           if (fileStats.isFile() && filePath.endsWith('.md')) {
-            const content = await fs.readFile(filePath, 'utf8');
+            const rawContent = await fs.readFile(filePath, 'utf8');
+            const { data, content } = matter(rawContent);
 
             const lastModified = fileStats.mtime.toLocaleString();
+
             notes.push({
               name: path.basename(filePath),
+              folderName: folder,
               content,
               lastModified,
+              isImportant: data.isImportant || false,
             });
           }
         }
@@ -98,7 +125,6 @@ ipcMain.handle('get-all-notes', async () => {
       await getNotesFromFolder(folder);
     }
 
-    console.log('Notes found:', notes);
     return notes;
   } catch (error) {
     console.error('Error getting all notes:', error);
@@ -110,7 +136,6 @@ ipcMain.handle('get-all-notes', async () => {
 ipcMain.handle('delete-folder', async (event, folderName) => {
   try {
     const folderPath = path.join(MARKY_FOLDER, folderName);
-    console.log(`Attempting to delete folder at: ${folderPath}`);
 
     const exists = await fs.pathExists(folderPath);
     if (!exists) {
@@ -119,7 +144,6 @@ ipcMain.handle('delete-folder', async (event, folderName) => {
     }
 
     await fs.remove(folderPath); // fs-extra's remove method
-    console.log(`Successfully deleted folder: ${folderPath}`);
     return { success: true, path: folderPath };
   } catch (error) {
     console.error('Error deleting folder:', error);
@@ -129,7 +153,6 @@ ipcMain.handle('delete-folder', async (event, folderName) => {
 
 ipcMain.handle('get-folders', async () => {
   try {
-    console.log('Getting folders from:', MARKY_FOLDER);
     // Use fs-extra's readdir which returns a promise
     const files = await fs.readdir(MARKY_FOLDER);
 
@@ -143,7 +166,6 @@ ipcMain.handle('get-folders', async () => {
       }
     }
 
-    console.log('Found folders:', folders);
     return folders;
   } catch (error) {
     console.error('Error reading folders:', error);
@@ -155,12 +177,12 @@ ipcMain.handle('get-folders', async () => {
 ipcMain.handle('get-notes', async (event, folderName) => {
   try {
     const folderPath = path.join(MARKY_FOLDER, folderName);
+    console.log(folderName, folderPath)
 
     const files = await fs.readdir(folderPath);
 
     const notes = files.filter((fileName) => fileName.endsWith('.md'));
 
-    console.log('Notes found:', notes);
     return notes;
   } catch (error) {
     console.error('Error fetching notes:', error);
@@ -174,21 +196,43 @@ ipcMain.handle('read-notes', async (event, folderName, noteName) => {
 
     const folderPath = path.join(MARKY_FOLDER, folderName);
     const notePath = path.join(folderPath, noteName)
-    const [noteContent, stat] = await Promise.all([
+    const [rawContent, stat] = await Promise.all([
       fs.readFile(notePath, { encoding: 'utf8', flag: 'r' }),
       fs.stat(notePath)
     ]);
 
     const lastModified = stat.mtime.toLocaleString()
+    const { data, content } = matter(rawContent);
     return {
-
-      content: noteContent,
+      content,
+      folderName,
       lastModified,
+      isImportant: data.isImportant || false,
     };
   } catch (error) {
     console.error('Error reading note:', error)
   }
 })
+
+ipcMain.handle('toggle-important', async (event, folderName, noteName, value) => {
+  try {
+    const folderPath = path.join(MARKY_FOLDER, folderName);
+    const notePath = path.join(folderPath, noteName);
+    const rawContent = await fs.readFile(notePath, 'utf8');
+
+    console.log(noteName, value);
+    const parsed = matter(rawContent);
+    parsed.data.isImportant = value;
+    console.log(value)
+    const updatedContent = matter.stringify(parsed.content, parsed.data);
+    await fs.writeFile(notePath, updatedContent, 'utf8');
+    console.log(`Toggled important for ${noteName}: ${value}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to toggle important:', error);
+    return { success: false, error: error.message };
+  }
+});
 
 ipcMain.handle('write-notes', async (event, folderName, noteName, content) => {
   try {
@@ -197,7 +241,6 @@ ipcMain.handle('write-notes', async (event, folderName, noteName, content) => {
 
     await fs.writeFile(notePath, content, { encoding: 'utf8' });
 
-    console.log(`Note written successfully: ${notePath}`);
     return { success: true };
   } catch (error) {
     console.error('Error writing note:', error);

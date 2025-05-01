@@ -13,5 +13,12 @@ contextBridge.exposeInMainWorld('electron', {
   createNote: (folderName, noteName) => ipcRenderer.invoke('create-notes', folderName, noteName),
   deleteNote: (folderName, noteName) => ipcRenderer.invoke('delete-notes', folderName, noteName),
   renameNote: (folderName, noteName, newNoteName) => ipcRenderer.invoke('rename-notes', folderName, noteName, newNoteName),
-  getAllNotes: () => ipcRenderer.invoke('get-all-notes')
+  getAllNotes: () => ipcRenderer.invoke('get-all-notes'),
+  toggleImportant: (folderName, noteName, value) => ipcRenderer.invoke('toggle-important', folderName, noteName, value),
+  saveUsername: (username) => ipcRenderer.invoke('save-username', username),
+  getUsername: () => ipcRenderer.invoke('get-username'),
+  ipcRenderer: {
+    on: (channel, callback) => ipcRenderer.on(channel, callback),
+    removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel),
+  },
 });

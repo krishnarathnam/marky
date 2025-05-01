@@ -23,6 +23,7 @@ export default function MarkDownEditor({ onSaveNote, selectedNote }) {
   const [value, setValue] = useState(selectedNote ? selectedNote.content : initialMarkdown);
   const [preview, setPreview] = useState('edit'); // 'edit' | 'preview' | 'live'
 
+  console.log(selectedNote)
   useEffect(() => {
     if (selectedNote) {
       setValue(selectedNote.content);
@@ -45,7 +46,7 @@ export default function MarkDownEditor({ onSaveNote, selectedNote }) {
           value={value}
           onChange={(newValue) => {
             setValue(newValue);
-            onSaveNote(newValue, selectedNote.name);
+            onSaveNote(selectedNote.folderName, newValue, selectedNote.name);
           }}
           preview={preview}
           commandsFilter={(cmd) => {

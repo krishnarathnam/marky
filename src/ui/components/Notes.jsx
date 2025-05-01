@@ -1,17 +1,8 @@
 import { Ellipsis, X, Trash2, Folder, Star, FolderPen } from 'lucide-react';
 import { useState } from 'react';
 
-export default function Notes({ onRenameNote, onDeleteNote, note, index, onSelectedNote, isToolbarOpen, onToggleToolbar }) {
-  const [renameModal, setRenameModal] = useState(false)
+export default function Notes({ renameModal, closeModal, openModal, onToggleImportant, onRenameNote, onDeleteNote, note, index, onSelectedNote, isToolbarOpen, onToggleToolbar }) {
   const [renameName, setRenameName] = useState('Default')
-
-  function openModal() {
-    setRenameModal(true)
-  }
-
-  function closeModal() {
-    setRenameModal(false)
-  }
 
   function HandleRename() {
     const safeNewName = renameName.endsWith('.md') ? renameName : `${renameName}.md`;
@@ -66,7 +57,7 @@ export default function Notes({ onRenameNote, onDeleteNote, note, index, onSelec
           {/*<button className="flex items-center gap-2 text-sm text-gray-800 hover:bg-gray-100 p-2 rounded w-full">
             <Folder size={16} /> Move to Folder
           </button>*/}
-          <button className="flex items-center gap-2 text-sm text-yellow-600 hover:bg-gray-100 p-2 rounded w-full">
+          <button onClick={() => onToggleImportant(note.folderName, note.name, !note.isImportant)} className="flex items-center gap-2 text-sm text-yellow-600 hover:bg-gray-100 p-2 rounded w-full">
             <Star size={16} /> Star
           </button>
           {!renameModal ? (
@@ -88,7 +79,8 @@ export default function Notes({ onRenameNote, onDeleteNote, note, index, onSelec
             </div>
           )}
         </div>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 }
