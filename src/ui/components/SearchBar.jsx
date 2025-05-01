@@ -1,7 +1,7 @@
 import React from 'react';
 import { Edit, ArrowDownAZ } from 'lucide-react';
 
-export default function SearchBar({ openModal, onHandleSort }) {
+export default function SearchBar({ linkFolderName, openModal, onHandleSort }) {
   return (
     <div className="m-2 mb-0.5">
       <div className="h-5 w-full justify-between flex items-center">
@@ -10,7 +10,7 @@ export default function SearchBar({ openModal, onHandleSort }) {
         </button>
         <h2 className='text-note-primary font-semibold'>All Notes</h2>
         <button onClick={() => openModal('note')}> {/* Open modal for creating note */}
-          <Edit size={20} className='text-note-primary' />
+          {linkFolderName && <Edit size={20} className='text-note-primary' />}
         </button>
       </div>
       <div className="h-14 w-full flex items-center ">

@@ -68,10 +68,10 @@ function App() {
     try {
       const response = await window.electron.toggleImportant(folderName, noteName, value);
       if (response.success) {
-        await getAllNotes(); // 2. Reconciliation: Re-fetch to confirm and update
+        await getAllNotes();
       } else {
         alert(`Failed to update importance: ${response.error}`);
-        await getAllNotes(); // Revert on failure
+        await getAllNotes();
       }
     } catch (error) {
       console.error("Error toggling important flag:", error);

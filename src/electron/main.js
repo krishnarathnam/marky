@@ -23,6 +23,7 @@ function createWindow() {
     width: 1280,
     height: 800,
     autoHideMenuBar: true,
+    icon: path.join(__dirname, 'public', 'logo.ico'),
     webPreferences: {
       preload: preloadPath,
       contextIsolation: true,

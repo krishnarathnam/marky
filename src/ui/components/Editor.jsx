@@ -24,7 +24,14 @@ export default function Editor({ getAllNotes, onToggleImportant, setAllNotes, on
   return (
     <div className="flex h-screen overflow-hidden">
       <div className="">
-        <NotesBar onToggleImportant={onToggleImportant} notes={notes} onDeleteNote={onDeleteNote} onRenameNote={onRenameNote} openModal={openModal} onSelectedNote={setSelectedNote} />
+        <NotesBar
+          linkFolderName={LinkFolderName}
+          onToggleImportant={onToggleImportant}
+          notes={notes}
+          onDeleteNote={onDeleteNote}
+          onRenameNote={onRenameNote}
+          openModal={openModal}
+          onSelectedNote={setSelectedNote} />
       </div>
       <div className="flex-1 ">
         <MarkDownEditor onSaveNote={onSaveNote} selectedNote={selectedNote} />
