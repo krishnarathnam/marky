@@ -4,7 +4,7 @@ import MarkDownEditor from "./MarkDownEditor";
 import PromptModal from "./PromptFolder";
 import { useLocation, useParams } from "react-router-dom";
 
-export default function Editor({ showNotesBar, getAllNotes, onToggleImportant, setAllNotes, onDeleteNote, onRenameNote, openModal, onSaveNote, notes, setLinkFolderName }) {
+export default function Editor({ linkFolderName, showNotesBar, getAllNotes, onToggleImportant, setAllNotes, onDeleteNote, onRenameNote, openModal, onSaveNote, notes, setLinkFolderName }) {
 
   const { LinkFolderName } = useParams();
   const [selectedNote, setSelectedNote] = useState('');
@@ -25,7 +25,7 @@ export default function Editor({ showNotesBar, getAllNotes, onToggleImportant, s
     <div className="flex h-screen overflow-hidden">
       <div className="">
         <NotesBar
-          linkFolderName={LinkFolderName}
+          linkFolderName={linkFolderName}
           showNotesBar={showNotesBar}
           onToggleImportant={onToggleImportant}
           notes={notes}

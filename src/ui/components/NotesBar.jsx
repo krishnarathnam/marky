@@ -55,7 +55,14 @@ export default function NotesBar({ showNotesBar, linkFolderName, onToggleImporta
   if (!notes || notes.length === 0) {
     return (
       <div className="border-border border-l-1 border-r-1 w-65 flex flex-col ">
-        <SearchBar openModal={openModal} />
+        <SearchBar
+          search={search}
+          onSearch={setSearch}
+          linkFolderName={linkFolderName}
+          onHandleSort={handleSort}
+          openModal={openModal}
+        />
+
         <hr className="border-border" />
         <div className="text-black font-bold text-sm justify-center">
           <p >No Notes Available.. Create one.</p>

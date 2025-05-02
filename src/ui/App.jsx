@@ -329,6 +329,7 @@ function App() {
               element={
                 <Editor
                   showNotesBar={showNotesBar}
+                  linkFolderName={linkFolderName}
                   getAllNotes={getAllNotes}
                   setAllNotes={setAllNotes}
                   onRenameNote={renameNote}
@@ -346,6 +347,7 @@ function App() {
               element={
                 <Editor
                   getAllNotes={getAllNotes}
+                  linkFolderName={linkFolderName}
                   showNotesBar={showNotesBar}
                   setAllNotes={setAllNotes}
                   onRenameNote={renameNote}
@@ -363,6 +365,7 @@ function App() {
               element={
                 <Editor
                   getAllNotes={getAllNotes}
+                  linkFolderName={linkFolderName}
                   showNotesBar={showNotesBar}
                   setAllNotes={setAllNotes}
                   onRenameNote={renameNote}
@@ -380,6 +383,7 @@ function App() {
               element={
                 <Editor
                   getAllNotes={getAllNotes}
+                  linkFolderName={linkFolderName}
                   onRenameNote={renameNote}
                   onDeleteNote={deleteNote}
                   showNotesBar={showNotesBar}
