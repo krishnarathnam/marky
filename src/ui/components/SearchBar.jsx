@@ -1,7 +1,7 @@
 import React from 'react';
 import { Edit, ArrowDownAZ } from 'lucide-react';
 
-export default function SearchBar({ linkFolderName, openModal, onHandleSort }) {
+export default function SearchBar({ search, onSearch, linkFolderName, openModal, onHandleSort }) {
   return (
     <div className="m-2 mb-0.5">
       <div className="h-5 w-full justify-between flex items-center">
@@ -16,7 +16,9 @@ export default function SearchBar({ linkFolderName, openModal, onHandleSort }) {
       <div className="h-14 w-full flex items-center ">
         <input
           type="text"
-          placeholder="Search...."
+          value={search}
+          placeholder="🔍 Search...."
+          onChange={(e) => onSearch(e.target.value)}
           className="flex-1 p-1 rounded-md border border-[#d0cfcf] focus:outline-none focus:ring-2 focus:ring-amber-300"
         />
       </div>

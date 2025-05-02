@@ -2,13 +2,19 @@ import React, { useEffect, useRef, useState } from "react";
 import SearchBar from "./SearchBar";
 import Notes from "./Notes";
 
-export default function NotesBar({ linkFolderName, onToggleImportant, onRenameNote, onDeleteNote, openModal, notes, onSelectedNote }) {
+export default function NotesBar({ showNotesBar, linkFolderName, onToggleImportant, onRenameNote, onDeleteNote, openModal, notes, onSelectedNote }) {
   const [openToolbarIndex, setOpenToolbarIndex] = useState(null);
   const [sortedNotes, setSortedNotes] = useState([])
   const [isSorted, setIsSorted] = useState(false)
   const [renameModal, setRenameModal] = useState(false)
   const [showScrollbar, setShowScrollbar] = useState(true);
+  const [search, setSearch] = useState('');
   const timeoutRef = useRef(null);
+
+  const filteredNotes = (isSorted ? sortedNotes : notes).filter(note =>
+    note.name.toLowerCase().includes(search.toLowerCase())
+  );
+
 
   const handleUserActivity = () => {
     setShowScrollbar(true);
@@ -59,22 +65,26 @@ export default function NotesBar({ linkFolderName, onToggleImportant, onRenameNo
   }
 
 
-  return (
+  return showNotesBar ? (
     <div className="border-border bg-notebar border-l-1 border-r-1 w-65 flex flex-col h-screen">
-      {/* SearchBar at the top */}
       <div className="shrink-0">
-        <SearchBar linkFolderName={linkFolderName} onHandleSort={handleSort} openModal={openModal} />
+        <SearchBar
+          search={search}
+          onSearch={setSearch}
+          linkFolderName={linkFolderName}
+          onHandleSort={handleSort}
+          openModal={openModal}
+        />
         <hr className="border-border" />
       </div>
 
-      {/* Scrollable notes section */}
       <div
         className={`flex-1 overflow-y-scroll transition-opacity duration-300 scrollbar-gutter-stable ${showScrollbar ? "scrollbar-visible" : "scrollbar-hidden"
           }`}
         onMouseMove={handleUserActivity}
         onScroll={handleUserActivity}
       >
-        {(isSorted ? sortedNotes : notes).map((note, index) => (
+        {filteredNotes.map((note, index) => (
           <Notes
             onToggleImportant={onToggleImportant}
             onDeleteNote={onDeleteNote}
@@ -95,6 +105,6 @@ export default function NotesBar({ linkFolderName, onToggleImportant, onRenameNo
         ))}
       </div>
     </div>
-  );
+  ) : null;
 }
 

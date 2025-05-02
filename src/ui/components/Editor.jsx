@@ -4,7 +4,7 @@ import MarkDownEditor from "./MarkDownEditor";
 import PromptModal from "./PromptFolder";
 import { useLocation, useParams } from "react-router-dom";
 
-export default function Editor({ getAllNotes, onToggleImportant, setAllNotes, onDeleteNote, onRenameNote, openModal, onSaveNote, notes, setLinkFolderName }) {
+export default function Editor({ showNotesBar, getAllNotes, onToggleImportant, setAllNotes, onDeleteNote, onRenameNote, openModal, onSaveNote, notes, setLinkFolderName }) {
 
   const { LinkFolderName } = useParams();
   const [selectedNote, setSelectedNote] = useState('');
@@ -26,6 +26,7 @@ export default function Editor({ getAllNotes, onToggleImportant, setAllNotes, on
       <div className="">
         <NotesBar
           linkFolderName={LinkFolderName}
+          showNotesBar={showNotesBar}
           onToggleImportant={onToggleImportant}
           notes={notes}
           onDeleteNote={onDeleteNote}

@@ -3,28 +3,29 @@ import SideBar from "./components/SideBar";
 import PromptFolder from "./components/PromptFolder";
 import Home from "./components/Home";
 import Editor from "./components/Editor";
-import { Routes, Route, useNavigate, HashRouter } from "react-router-dom";
+import { Routes, Route, HashRouter } from "react-router-dom";
 
 function App() {
   const [modalOpen, setModalOpen] = useState(false);
   const [folders, setFolders] = useState([]);
-  const [folderName, setFolderName] = useState('Default');
-  const [linkFolderName, setLinkFolderName] = useState('')
-  const [notes, setNotes] = useState([])
-  const [noteName, setNoteName] = useState('')
-  const [modalType, setModalType] = useState('folder');
+  const [folderName, setFolderName] = useState("Default");
+  const [linkFolderName, setLinkFolderName] = useState("");
+  const [notes, setNotes] = useState([]);
+  const [noteName, setNoteName] = useState("");
+  const [modalType, setModalType] = useState("folder");
   const [allNotes, setAllNotes] = useState([]);
   const [lastWorked, setLastWorked] = useState(null);
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState("");
   const [showPrompt, setShowPrompt] = useState(false);
-  const [appReady, setAppReady] = useState(false)
+  const [appReady, setAppReady] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(true);
+  const [showNotesBar, setShowNotesBar] = useState(true);
 
   const importantNotes = (allNotes || []).filter((note) => note.isImportant);
 
   const recentNotes = [...allNotes].sort((a, b) => {
     const aDate = new Date(a.lastModified);
     const bDate = new Date(b.lastModified);
-
     return bDate - aDate;
   });
 
@@ -33,8 +34,8 @@ function App() {
       const response = await window.electron.createSubfolder(folderName);
       if (response.success) {
         fetchFolders();
-        setModalOpen(false)
-        console.log(folders)
+        setModalOpen(false);
+        console.log(folders);
       } else {
         alert(`Error: ${response.error}`);
       }
@@ -43,7 +44,6 @@ function App() {
       alert(`Error creating folder: ${error.message}`);
     }
   }
-
 
   async function getAllNotes() {
     try {
@@ -56,7 +56,7 @@ function App() {
   }
 
   async function toggleImportant(folderName, noteName, value) {
-    const updatedNotes = allNotes.map(n => {
+    const updatedNotes = allNotes.map((n) => {
       if (n.folderName === folderName && n.name === noteName) {
         return { ...n, isImportant: value };
       }
@@ -108,7 +108,8 @@ function App() {
       const noteNames = await window.electron.getNotes(linkFolderName);
       const notesData = await Promise.all(
         noteNames.map(async (noteName) => {
-          const { content, lastModified, isImportant } = await window.electron.readNotes(linkFolderName, noteName);
+          const { content, lastModified, isImportant } =
+            await window.electron.readNotes(linkFolderName, noteName);
 
           return {
             name: noteName,
@@ -122,13 +123,13 @@ function App() {
 
       setNotes(notesData);
     } catch (error) {
-      console.error('Error fetching notes:', error);
+      console.error("Error fetching notes:", error);
     }
   };
 
   const saveNote = async (folderName, content, noteName) => {
     try {
-      const response = await window.electron.saveNote(folderName, noteName, content)
+      const response = await window.electron.saveNote(folderName, noteName, content);
       setLastWorked(new Date());
       if (response.success) {
         console.log(`Note "${noteName}" saved successfully!`);
@@ -136,11 +137,10 @@ function App() {
         console.error("Error saving note:", response.error);
       }
     } catch (error) {
-      console.error('error saving file: ', error);
-
+      console.error("error saving file: ", error);
     }
+  };
 
-  }
   async function createNewNote(name) {
     try {
       const response = await window.electron.createNote(linkFolderName, name);
@@ -190,17 +190,17 @@ function App() {
       const response = await window.electron.saveUsername(username);
       if (response.success) {
         setShowPrompt(false);
-        console.log('Username saved:', username);
+        console.log("Username saved:", username);
       } else {
-        alert('Failed to save username.');
+        alert("Failed to save username.");
       }
     } else {
-      alert('Please enter a username.');
+      alert("Please enter a username.");
     }
   };
 
   useEffect(() => {
-    window.electron.ipcRenderer.on('show-username-prompt', () => {
+    window.electron.ipcRenderer.on("show-username-prompt", () => {
       setShowPrompt(true);
     });
 
@@ -218,7 +218,7 @@ function App() {
     getSavedUsername();
 
     return () => {
-      window.electron.ipcRenderer.removeAllListeners('show-username-prompt');
+      window.electron.ipcRenderer.removeAllListeners("show-username-prompt");
     };
   }, []);
 
@@ -230,14 +230,33 @@ function App() {
     }
   }, [linkFolderName]);
 
-
   useEffect(() => {
     fetchFolders();
   }, []);
 
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const ctrlOrCmd = isMac ? e.metaKey : e.ctrlKey;
+
+      if (ctrlOrCmd && e.key === 'b') {
+        e.preventDefault();
+        setShowSidebar(prev => !prev);
+      }
+
+      if (ctrlOrCmd && e.key === 'n') {
+        e.preventDefault();
+        setShowNotesBar(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   function openModal(type) {
-    setModalType(type)
+    setModalType(type);
     setModalOpen(true);
   }
 
@@ -279,30 +298,100 @@ function App() {
     return <div>Loading...</div>;
   }
 
-
   return (
-
     <HashRouter>
       <div className="flex h-screen">
-        {modalOpen &&
+        {modalOpen && (
           <PromptFolder
             type={modalType}
-            setName={modalType === 'folder' ? setFolderName : setNoteName}
+            setName={modalType === "folder" ? setFolderName : setNoteName}
             closeModal={closeModal}
-            createItem={modalType === 'folder' ? createNewFolder : createNewNote}
+            createItem={modalType === "folder" ? createNewFolder : createNewNote}
           />
-        }
-        <SideBar lastWorked={lastWorked} username={username} setLastWorked={setLastWorked} onDeleteFolder={onDeleteFolder} openModal={openModal} setFolders={setFolders} folders={folders} />
+        )}
+        {
+          showSidebar && (
+            <SideBar
+              lastWorked={lastWorked}
+              username={username}
+              setLastWorked={setLastWorked}
+              onDeleteFolder={onDeleteFolder}
+              openModal={openModal}
+              setFolders={setFolders}
+              folders={folders}
+            />
+          )}
         <main className="flex-1 overflow-y-auto">
           <Routes>
-            <Route path='/' element={<Home username={username} />} />
+            <Route path="/" element={<Home username={username} />} />
             <Route
-              path='/category/important'
-              element=
-              {<Editor getAllNotes={getAllNotes} setAllNotes={setAllNotes} onRenameNote={renameNote} onDeleteNote={deleteNote} openModal={openModal} notes={importantNotes} onSaveNote={saveNote} onToggleImportant={toggleImportant} setLinkFolderName={setLinkFolderName} />} />
-            <Route path='/category/recent' element={<Editor getAllNotes={getAllNotes} setAllNotes={setAllNotes} onRenameNote={renameNote} onDeleteNote={deleteNote} openModal={openModal} notes={recentNotes} onSaveNote={saveNote} onToggleImportant={toggleImportant} setLinkFolderName={setLinkFolderName} />} />
-            <Route path='/category/all' element={<Editor getAllNotes={getAllNotes} setAllNotes={setAllNotes} onRenameNote={renameNote} onDeleteNote={deleteNote} openModal={openModal} notes={allNotes} onSaveNote={saveNote} setLinkFolderName={setLinkFolderName} onToggleImportant={toggleImportant} />} />
-            <Route path='/folder/:LinkFolderName' element={<Editor getAllNotes={getAllNotes} onRenameNote={renameNote} onDeleteNote={deleteNote} openModal={openModal} onSaveNote={saveNote} notes={notes} setLinkFolderName={setLinkFolderName} currentFolerName={linkFolderName} onToggleImportant={toggleImportant} />} />
+              path="/category/important"
+              element={
+                <Editor
+                  showNotesBar={showNotesBar}
+                  getAllNotes={getAllNotes}
+                  setAllNotes={setAllNotes}
+                  onRenameNote={renameNote}
+                  onDeleteNote={deleteNote}
+                  openModal={openModal}
+                  notes={importantNotes}
+                  onSaveNote={saveNote}
+                  onToggleImportant={toggleImportant}
+                  setLinkFolderName={setLinkFolderName}
+                />
+              }
+            />
+            <Route
+              path="/category/recent"
+              element={
+                <Editor
+                  getAllNotes={getAllNotes}
+                  showNotesBar={showNotesBar}
+                  setAllNotes={setAllNotes}
+                  onRenameNote={renameNote}
+                  onDeleteNote={deleteNote}
+                  openModal={openModal}
+                  notes={recentNotes}
+                  onSaveNote={saveNote}
+                  onToggleImportant={toggleImportant}
+                  setLinkFolderName={setLinkFolderName}
+                />
+              }
+            />
+            <Route
+              path="/category/all"
+              element={
+                <Editor
+                  getAllNotes={getAllNotes}
+                  showNotesBar={showNotesBar}
+                  setAllNotes={setAllNotes}
+                  onRenameNote={renameNote}
+                  onDeleteNote={deleteNote}
+                  openModal={openModal}
+                  notes={allNotes}
+                  onSaveNote={saveNote}
+                  setLinkFolderName={setLinkFolderName}
+                  onToggleImportant={toggleImportant}
+                />
+              }
+            />
+            <Route
+              path="/folder/:LinkFolderName"
+              element={
+                <Editor
+                  getAllNotes={getAllNotes}
+                  onRenameNote={renameNote}
+                  onDeleteNote={deleteNote}
+                  showNotesBar={showNotesBar}
+                  openModal={openModal}
+                  onSaveNote={saveNote}
+                  notes={notes}
+                  setLinkFolderName={setLinkFolderName}
+                  currentFolerName={linkFolderName}
+                  onToggleImportant={toggleImportant}
+                />
+              }
+            />
           </Routes>
         </main>
       </div>
