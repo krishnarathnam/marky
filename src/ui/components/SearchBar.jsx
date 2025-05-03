@@ -9,7 +9,7 @@ export default function SearchBar({ search, onSearch, linkFolderName, openModal,
           <ArrowDownAZ size={20} className='text-note-primary' />
         </button>
         <h2 className='text-note-primary font-semibold'>All Notes</h2>
-        <button onClick={() => openModal('note')}> {/* Open modal for creating note */}
+        <button onClick={openModal}> {/* Open modal for creating note */}
           {linkFolderName && <Edit size={20} className='text-note-primary' />}
         </button>
       </div>

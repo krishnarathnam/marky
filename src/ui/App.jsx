@@ -107,7 +107,7 @@ function App() {
     }
   };
 
-  const fetchNotes = async () => {
+  async function fetchNotes() {
     try {
       const noteNames = await window.electron.getNotes(linkFolderName);
       const notesData = await Promise.all(
@@ -124,6 +124,8 @@ function App() {
           };
         })
       );
+
+      notesData.sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified))
 
       setNotes(notesData);
     } catch (error) {

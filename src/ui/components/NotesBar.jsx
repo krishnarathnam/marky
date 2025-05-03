@@ -7,26 +7,13 @@ export default function NotesBar({ handleExportPDF, linkFolderName, onToggleImpo
   const [sortedNotes, setSortedNotes] = useState([])
   const [isSorted, setIsSorted] = useState(false)
   const [renameModal, setRenameModal] = useState(false)
-  const [showScrollbar, setShowScrollbar] = useState(true);
   const [search, setSearch] = useState('');
-  const timeoutRef = useRef(null);
 
   const filteredNotes = (isSorted ? sortedNotes : notes).filter(note =>
     note.name.toLowerCase().includes(search.toLowerCase())
   );
 
 
-  const handleUserActivity = () => {
-    setShowScrollbar(true);
-
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-
-    timeoutRef.current = setTimeout(() => {
-      setShowScrollbar(false);
-    }, 600);
-  };
 
   function openModalRename() {
     setRenameModal(true)
@@ -86,10 +73,7 @@ export default function NotesBar({ handleExportPDF, linkFolderName, onToggleImpo
       </div>
 
       <div
-        className={`flex-1 overflow-y-scroll transition-opacity duration-300 scrollbar-gutter-stable ${showScrollbar ? "scrollbar-visible" : "scrollbar-hidden"
-          }`}
-        onMouseMove={handleUserActivity}
-        onScroll={handleUserActivity}
+        className={`flex-1 overflow-y-scroll transition-opacity duration-300 scrollbar-hidden`}
       >
         {filteredNotes.map((note, index) => (
           <Notes
