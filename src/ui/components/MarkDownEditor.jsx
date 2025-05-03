@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
-
+import React, { useEffect, useState } from 'react'
 import MDEditor from '@uiw/react-md-editor';
 import mermaid from 'mermaid';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-import { Eye, SquareSplitHorizontal, Pencil } from 'lucide-react';
+import { Eye, SquareSplitHorizontal, Pencil, FileText } from 'lucide-react';
 import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
 import 'katex/dist/katex.min.css';
@@ -15,9 +14,9 @@ const initialMarkdown = `# Mermaid + KaTeX Example
 
 \`\`\`mermaid
 graph TD;
-  A[Start] --> B{Is it working?};
-  B -- Yes --> C[Great!];
-  B -- No --> D[Check code];
+ A[Start] --> B{Is it working?};
+ B -- Yes --> C[Great!];
+ B -- No --> D[Check code];
 \`\`\`
 
 ## Math Example
@@ -34,12 +33,11 @@ $$
 export default function MarkDownEditor({ onSaveNote, selectedNote }) {
   const [value, setValue] = useState(selectedNote ? selectedNote.content : initialMarkdown);
   const [preview, setPreview] = useState('edit');
-
   useEffect(() => {
     if (selectedNote) {
       setValue(selectedNote.content);
     }
-  }, [selectedNote]);
+  }, [selectedNote?.name, selectedNote?.folderName]);
 
   function changePreview(mode) {
     setPreview(prev => (prev === 'edit' ? mode : 'edit'));
@@ -47,6 +45,10 @@ export default function MarkDownEditor({ onSaveNote, selectedNote }) {
 
   useEffect(() => {
     if (preview === 'edit') return;
+
+    // Cleanup previous Mermaid containers
+    const oldWrappers = document.querySelectorAll('.mermaid-wrapper');
+    oldWrappers.forEach(wrapper => wrapper.remove());
 
     mermaid.initialize({ startOnLoad: false });
 
@@ -64,6 +66,7 @@ export default function MarkDownEditor({ onSaveNote, selectedNote }) {
       container.innerHTML = codeBlock.textContent;
 
       const wrapper = document.createElement('div');
+      wrapper.className = 'mermaid-wrapper'; // Used for cleanup
       wrapper.style.display = 'flex';
       wrapper.style.justifyContent = 'center';
       wrapper.style.margin = '1rem 0';
@@ -92,9 +95,15 @@ export default function MarkDownEditor({ onSaveNote, selectedNote }) {
           preview={preview}
           height="100%"
           className="custom-md-editor"
+          commandsFilter={(cmd) => {
+            if (/(edit|live|preview)/.test(cmd.name)) {
+              return false;
+            }
+            return cmd;
+          }}
           previewOptions={{
             remarkPlugins: [remarkMath],
-            rehypePlugins: [[rehypeKatex, { 
+            rehypePlugins: [[rehypeKatex, {
               strict: false,
               output: 'html'
             }]],

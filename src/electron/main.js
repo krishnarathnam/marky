@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -6,6 +6,10 @@ import fs from 'fs-extra';
 import os from 'os';
 import matter from 'gray-matter';
 import Store from 'electron-store'
+import MarkdownIt from 'markdown-it';
+import mdKatex from '@iktakahiro/markdown-it-katex'
+import katex from 'katex'
+import hljs from 'highlight.js'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -249,7 +253,396 @@ ipcMain.handle('write-notes', async (event, folderName, noteName, content) => {
   }
 });
 
+// Preprocess KaTeX math delimiters
+function preprocessKaTeX(md) {
+  // Handle block math first (must come before inline to avoid conflict)
+  md = md.replace(/\$\$([\s\S]+?)\$\$/g, (_, expr) => {
+    try {
+      return katex.renderToString(expr, { displayMode: true, throwOnError: false });
+    } catch (e) {
+      return `<pre>${expr}</pre>`;
+    }
+  });
+  // Handle inline math with single dollar signs: $...$
+  md = md.replace(/(?<!\$)\$(?!\$)(.+?)(?<!\$)\$(?!\$)/g, (_, expr) => {
+    try {
+      return katex.renderToString(expr, { displayMode: false, throwOnError: false });
+    } catch (e) {
+      return `<code>${expr}</code>`;
+    }
+  });
+  return md;
+}
 
+// Process mermaid code blocks specifically
+function processMermaidBlocks(html) {
+  // Replace any mermaid code blocks with properly formatted divs
+  return html.replace(/<pre><code class="language-mermaid">([\s\S]+?)<\/code><\/pre>/g,
+    (_, content) => {
+      const escapedContent = content
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'");
+
+      return `<div class="mermaid">${escapedContent}</div>`;
+    }
+  );
+}
+
+// this is the main function
+async function generatePdf(htmlContent, fileName) {
+  try {
+    // Create an offscreen browser window for rendering
+    const exportWin = new BrowserWindow({
+      width: 1000,
+      height: 800,
+      show: false, // Keep invisible
+      webPreferences: {
+        offscreen: true,
+        javascript: true,
+        webSecurity: false,
+        nodeIntegration: false,
+        contextIsolation: true,
+      }
+    });
+
+    // Build the complete HTML with all required libraries and styles
+    const fullHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Markdown PDF</title>
+       
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" crossorigin="anonymous">
+       
+        <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+       
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark-dimmed.min.css">
+       
+        <style>
+          body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            margin: 2em;
+            line-height: 1.5;
+            color: #333;
+          }
+         
+          h1, h2, h3, h4, h5, h6 {
+            margin-top: 1.5em;
+            margin-bottom: 0.5em;
+            font-weight: 600;
+          }
+         
+          h1 { font-size: 2em; }
+          h2 { font-size: 1.5em; }
+          h3 { font-size: 1.3em; }
+         
+          pre {
+            background: #f6f8fa;
+            padding: 16px;
+            border-radius: 6px;
+            overflow-x: auto;
+          }
+         
+          code {
+            font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+            background: #f6f8fa;
+            padding: 2px 4px;
+            border-radius: 3px;
+          }
+         
+          pre code {
+            padding: 0;
+            background: transparent;
+          }
+         
+          blockquote {
+            border-left: 4px solid #ddd;
+            margin-left: 0;
+            padding-left: 1em;
+            color: #666;
+          }
+         
+          table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1em 0;
+          }
+         
+          table, th, td {
+            border: 1px solid #ddd;
+          }
+         
+          th, td {
+            padding: 8px 12px;
+            text-align: left;
+          }
+         
+          th {
+            background-color: #f6f8fa;
+          }
+         
+          .mermaid {
+            text-align: center;
+            margin: 1.5em 0;
+            background-color: white;
+            padding: 10px;
+            border-radius: 6px;
+          }
+         
+          img {
+            max-width: 100%;
+            height: auto;
+          }
+         
+          /* KaTeX styles */
+ .katex-display {
+      background-color: #f5f5f5;
+      padding: 20px;
+      border-radius: 6px;
+      overflow-x: auto;
+      display: block;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .katex {
+      display: inline-block;
+      margin: 0 0.2em;
+      text-rendering: auto;
+      font-size: 1em;
+    }
+    .katex .base {
+      margin-top: 2px;
+    }
+        </style>
+      </head>
+      <body class="markdown-body">
+        ${htmlContent}
+        
+        <script>
+          // Configure Mermaid
+          mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            fontFamily: 'system-ui, sans-serif'
+          });
+          
+          // Track rendering status
+          let renderingComplete = false;
+
+          // Function to notify when rendering is complete
+          function notifyRendered() {
+            renderingComplete = true;
+            if (window.electronAPI?.send) {
+              window.electronAPI.send('RENDERING_COMPLETE');
+            } else {
+              window.postMessage('RENDERING_COMPLETE', '*');
+            }
+          }
+
+          // Handle both native mermaid divs and converted code blocks
+          function processMermaidDiagrams() {
+            // Run mermaid on all .mermaid divs
+            try {
+              mermaid.run().then(() => {
+                // Add a delay to ensure rendering completes
+                setTimeout(notifyRendered, 1000);
+              }).catch(err => {
+                console.error('Mermaid rendering error:', err);
+                notifyRendered();
+              });
+            } catch (err) {
+              console.error('Mermaid processing error:', err);
+              notifyRendered();
+            }
+          }
+
+          // Handle page load
+          window.addEventListener('DOMContentLoaded', () => {
+            // Check if we have any mermaid diagrams
+            const hasMermaidDiagrams = document.querySelectorAll('.mermaid').length > 0;
+            
+            if (hasMermaidDiagrams) {
+              processMermaidDiagrams();
+            } else {
+              // No mermaid diagrams, complete immediately
+              setTimeout(notifyRendered, 100);
+            }
+          });
+          
+          // Handle window messages (fallback)
+          window.addEventListener('message', (event) => {
+            if (event.data === 'RENDERING_COMPLETE') {
+              if (window.electronAPI?.send) {
+                window.electronAPI.send('RENDERING_COMPLETE');
+              } else {
+                console.log('Rendering complete signal received');
+              }
+            }
+          });
+        </script>
+      </body>
+      </html>
+    `;
+
+    // Log renderer console messages
+    exportWin.webContents.on('console-message', (event, level, message) => {
+      console.log(`Renderer log [${level}]: ${message}`);
+    });
+
+    // Load the HTML content
+    await exportWin.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(fullHtml)}`);
+
+    // Wait for rendering to complete with timeout
+    await new Promise((resolve) => {
+      // Set a maximum wait time of 8 seconds
+      const timeout = setTimeout(() => {
+        console.log('PDF rendering timeout reached (8s), proceeding anyway');
+        resolve();
+      }, 8000);
+
+      // Listen for the rendering complete message
+      const handleMessage = (event, channel) => {
+        if (channel === 'RENDERING_COMPLETE') {
+          console.log('Received rendering complete signal');
+          clearTimeout(timeout);
+          resolve();
+          exportWin.webContents.removeListener('ipc-message', handleMessage);
+        }
+      };
+
+      exportWin.webContents.on('ipc-message', handleMessage);
+
+      // Setup the message handler in the renderer
+      exportWin.webContents.on('did-finish-load', () => {
+        exportWin.webContents.executeJavaScript(`
+          // Define electronAPI if it doesn't exist (for older Electron versions)
+          if (!window.electronAPI) {
+            window.electronAPI = {
+              send: (channel, data) => {
+                if (typeof window.ipcRenderer !== 'undefined') {
+                  window.ipcRenderer.send(channel, data);
+                } else {
+                  console.log('IPC not available, using postMessage');
+                  window.postMessage(channel, '*');
+                }
+              }
+            };
+          }
+        `);
+      });
+    });
+
+    // Add a small buffer time to ensure everything is settled
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Show save dialog
+    const defaultFileName = fileName.toLowerCase().endsWith('.pdf') ? fileName : `${fileName}.pdf`;
+    const saveResult = await dialog.showSaveDialog({
+      defaultPath: defaultFileName,
+      filters: [{ name: 'PDF Files', extensions: ['pdf'] }],
+    });
+
+    // If user selected a path, save the PDF
+    const filePath = saveResult.filePath;
+    if (filePath) {
+      // Generate PDF
+      const pdfBuffer = await exportWin.webContents.printToPDF({
+        printBackground: true,
+        pageSize: 'A4',
+        landscape: false,
+        displayHeaderFooter: false,
+        margins: {
+          marginType: 'default'
+        },
+        preferCSSPageSize: false
+      });
+
+      // Save PDF to file
+      await fs.writeFile(filePath, pdfBuffer);
+      console.log(`PDF saved successfully to: ${filePath}`);
+      return { success: true, path: filePath };
+    } else {
+      console.log('PDF export cancelled by user');
+      return { success: false, cancelled: true };
+    }
+
+    // Clean up
+    exportWin.destroy();
+
+  } catch (err) {
+    console.error("PDF export failed:", err);
+    return { success: false, error: err.message };
+  }
+}
+
+// Electron IPC handler
+ipcMain.on('export-to-pdf', async (event, data) => {
+  try {
+    console.log("Starting enhanced PDF export with data:", typeof data, Object.keys(data));
+
+    const content = data.content;
+    const fileName = (typeof data.fileName === 'string' && data.fileName)
+      ? data.fileName
+      : 'document.pdf';
+
+    // Configure markdown-it with KaTeX support
+    const md = new MarkdownIt({
+      html: true,
+      highlight: function(str, lang) {
+        // Special handling for mermaid - don't highlight it
+        if (lang === 'mermaid') return str;
+
+        // Syntax highlighting for other languages
+        if (lang && hljs.getLanguage(lang)) {
+          try {
+            return hljs.highlight(str, { language: lang }).value;
+          } catch (err) {
+            console.error('Highlight error:', err);
+          }
+        }
+        return ''; // Use external default escaping
+      }
+    }).use(mdKatex, {
+      throwOnError: false,
+      strict: false,
+      output: 'mathml', // For better PDF rendering
+    });
+
+    // Process markdown to HTML
+    let htmlContent;
+    if (content && typeof content === 'object' && content.content) {
+      // Use matter to parse the content, and then preprocess KaTeX
+      const { content: mdContent } = matter(content.content);
+      const preprocessedContent = preprocessKaTeX(mdContent);
+      htmlContent = md.render(preprocessedContent);
+
+    } else if (typeof content === 'string') {
+      // If content is a string, preprocess it directly
+      const preprocessedContent = preprocessKaTeX(content);
+      htmlContent = md.render(preprocessedContent);
+    } else {
+      htmlContent = '<p>No content to export</p>';
+    }
+
+    // Process mermaid code blocks
+    htmlContent = processMermaidBlocks(htmlContent);
+
+    const result = await generatePdf(htmlContent, fileName);
+    event.sender.send('pdf-export-complete', result);
+
+  } catch (error) {
+    console.error("Error in ipcMain handler:", error);
+    event.sender.send('pdf-export-complete', { success: false, error: error.message });
+    dialog.showErrorBox('Error during PDF export', error.message);
+  }
+});
 ipcMain.handle('create-notes', async (event, folderName, noteName) => {
   try {
     const folderPath = path.join(MARKY_FOLDER, folderName);

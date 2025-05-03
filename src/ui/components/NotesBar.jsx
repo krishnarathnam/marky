@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import SearchBar from "./SearchBar";
 import Notes from "./Notes";
 
-export default function NotesBar({ showNotesBar, linkFolderName, onToggleImportant, onRenameNote, onDeleteNote, openModal, notes, onSelectedNote }) {
+export default function NotesBar({ handleExportPDF, linkFolderName, onToggleImportant, onRenameNote, onDeleteNote, openModal, notes, onSelectedNote }) {
   const [openToolbarIndex, setOpenToolbarIndex] = useState(null);
   const [sortedNotes, setSortedNotes] = useState([])
   const [isSorted, setIsSorted] = useState(false)
@@ -72,8 +72,8 @@ export default function NotesBar({ showNotesBar, linkFolderName, onToggleImporta
   }
 
 
-  return showNotesBar ? (
-    <div className="border-border bg-notebar border-l-1 border-r-1 w-65 flex flex-col h-screen">
+  return (
+    <div className="border-border w-65 bg-notebar border-l-1 border-r-1 w-65 flex flex-col h-screen">
       <div className="shrink-0">
         <SearchBar
           search={search}
@@ -93,6 +93,7 @@ export default function NotesBar({ showNotesBar, linkFolderName, onToggleImporta
       >
         {filteredNotes.map((note, index) => (
           <Notes
+            handleExportPDF={handleExportPDF}
             onToggleImportant={onToggleImportant}
             onDeleteNote={onDeleteNote}
             onRenameNote={onRenameNote}
@@ -112,6 +113,6 @@ export default function NotesBar({ showNotesBar, linkFolderName, onToggleImporta
         ))}
       </div>
     </div>
-  ) : null;
+  )
 }
 

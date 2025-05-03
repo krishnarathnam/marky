@@ -1,7 +1,7 @@
-import { Ellipsis, X, Trash2, Folder, Star, FolderPen } from 'lucide-react';
+import { Ellipsis, X, Trash2, FileDown, Star, FolderPen } from 'lucide-react';
 import { useState } from 'react';
 
-export default function Notes({ renameModal, closeModal, openModal, onToggleImportant, onRenameNote, onDeleteNote, note, index, onSelectedNote, isToolbarOpen, onToggleToolbar }) {
+export default function Notes({ handleExportPDF, renameModal, closeModal, openModal, onToggleImportant, onRenameNote, onDeleteNote, note, onSelectedNote, isToolbarOpen, onToggleToolbar }) {
   const [renameName, setRenameName] = useState('Default')
 
   function HandleRename() {
@@ -59,6 +59,17 @@ export default function Notes({ renameModal, closeModal, openModal, onToggleImpo
           </button>*/}
           <button onClick={() => onToggleImportant(note.folderName, note.name, !note.isImportant)} className="flex items-center gap-2 text-sm text-yellow-600 hover:bg-gray-100 p-2 rounded w-full">
             <Star size={16} /> Star
+          </button>
+          <button
+            onClick={() => {
+              handleExportPDF({
+                content: note.content,
+                fileName: note.name.replace(/\.md$/, '') + '.pdf',
+              });
+            }}
+            className="flex items-center gap-2 text-sm text-gray-700 hover:bg-gray-100 p-2 rounded w-full"
+          >
+            <FileDown size={16} color="#0055ff" /> Save as PDF
           </button>
           {!renameModal ? (
             <button

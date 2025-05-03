@@ -1,7 +1,7 @@
 import { Settings } from 'lucide-react'
 import { useEffect } from 'react';
 
-export default function Header({ username, setLastWorked, lastWorked }) {
+export default function Header({ handleHomeOnClick, username, setLastWorked, lastWorked }) {
 
   useEffect(() => {
     const saved = localStorage.getItem("lastWorked");
@@ -32,15 +32,17 @@ export default function Header({ username, setLastWorked, lastWorked }) {
   })();
 
   return (
-    <nav className="bg-darker-blue rounded-b-sm shadow-2xs  flex flex-col mb-5">
-      <div className="flex justify-between p-3 pb-5 mt-2 items-center">
-        <div>
-          <h3 className='font-bold text-m'>{username}</h3>
-          <p className='text-xs '>Last worked at {formattedTime}</p>
+    <div className="bg-darker-blue rounded-b-sm shadow-2xs flex flex-col mb-5">
+      <div className="flex justify-between items-center p-3 pb-5 mt-2">
+        <div className="overflow-hidden text-ellipsis whitespace-nowrap max-w-full">
+          <h3 onClick={handleHomeOnClick} className="font-bold text-m">
+            {username}
+          </h3>
+          <p className="text-xs">Last worked at {formattedTime}</p>
         </div>
-        <Settings size={18} className='' />
+        <Settings size={18} className="" />
       </div>
-    </nav>
+    </div>
   );
 }
 

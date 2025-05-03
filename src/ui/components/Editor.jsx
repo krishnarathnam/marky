@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import NotesBar from "./NotesBar";
 import MarkDownEditor from "./MarkDownEditor";
-import PromptModal from "./PromptFolder";
+import { AnimatePresence, motion } from 'motion/react'
 import { useLocation, useParams } from "react-router-dom";
 
-export default function Editor({ linkFolderName, showNotesBar, getAllNotes, onToggleImportant, setAllNotes, onDeleteNote, onRenameNote, openModal, onSaveNote, notes, setLinkFolderName }) {
+export default function Editor({ handleExportPDF, linkFolderName, showNotesBar, getAllNotes, onToggleImportant, setAllNotes, onDeleteNote, onRenameNote, openModal, onSaveNote, notes, setLinkFolderName }) {
 
   const { LinkFolderName } = useParams();
   const [selectedNote, setSelectedNote] = useState('');
@@ -23,20 +23,38 @@ export default function Editor({ linkFolderName, showNotesBar, getAllNotes, onTo
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <div className="">
-        <NotesBar
-          linkFolderName={linkFolderName}
-          showNotesBar={showNotesBar}
-          onToggleImportant={onToggleImportant}
-          notes={notes}
-          onDeleteNote={onDeleteNote}
-          onRenameNote={onRenameNote}
-          openModal={openModal}
-          onSelectedNote={setSelectedNote} />
-      </div>
-      <div className="flex-1 ">
+      <AnimatePresence mode="wait">
+        {showNotesBar && (
+          <motion.div
+            key="notesbar"
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 260, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="flex-shrink-0 overflow-hidden"
+          >
+            <NotesBar
+              handleExportPDF={handleExportPDF}
+              linkFolderName={linkFolderName}
+              showNotesBar={showNotesBar}
+              onToggleImportant={onToggleImportant}
+              notes={notes}
+              onDeleteNote={onDeleteNote}
+              onRenameNote={onRenameNote}
+              openModal={openModal}
+              onSelectedNote={setSelectedNote}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.div
+        layout
+        transition={{ duration: 0.3 }}
+        className="flex-1"
+      >
         <MarkDownEditor onSaveNote={onSaveNote} selectedNote={selectedNote} />
-      </div>
+      </motion.div>
     </div>
   );
 }
