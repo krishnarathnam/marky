@@ -3,8 +3,9 @@ import NotesBar from "./NotesBar";
 import MarkDownEditor from "./MarkDownEditor";
 import { AnimatePresence, motion } from 'motion/react'
 import { useLocation, useParams } from "react-router-dom";
+import MarkDownContainer from "./MarkDownContainer";
 
-export default function Editor({ handleExportPDF, linkFolderName, showNotesBar, getAllNotes, onToggleImportant, setAllNotes, onDeleteNote, onRenameNote, openModal, onSaveNote, notes, setLinkFolderName }) {
+export default function Editor({ onCreateNewNote, handleExportPDF, linkFolderName, showNotesBar, getAllNotes, onToggleImportant, setAllNotes, onDeleteNote, onRenameNote, openModal, onSaveNote, notes, setLinkFolderName }) {
 
   const { LinkFolderName } = useParams();
   const [selectedNote, setSelectedNote] = useState('');
@@ -34,6 +35,7 @@ export default function Editor({ handleExportPDF, linkFolderName, showNotesBar, 
             className="flex-shrink-0 overflow-hidden"
           >
             <NotesBar
+              onCreateNewNote={onCreateNewNote}
               handleExportPDF={handleExportPDF}
               linkFolderName={linkFolderName}
               showNotesBar={showNotesBar}
@@ -53,7 +55,7 @@ export default function Editor({ handleExportPDF, linkFolderName, showNotesBar, 
         transition={{ duration: 0.3 }}
         className="flex-1"
       >
-        <MarkDownEditor onSaveNote={onSaveNote} selectedNote={selectedNote} />
+        <MarkDownContainer onSaveNote={onSaveNote} selectedNote={selectedNote} />
       </motion.div>
     </div>
   );

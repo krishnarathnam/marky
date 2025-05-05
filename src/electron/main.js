@@ -1,4 +1,5 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import { marked } from 'marked';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -7,9 +8,9 @@ import os from 'os';
 import matter from 'gray-matter';
 import Store from 'electron-store'
 import MarkdownIt from 'markdown-it';
-import mdKatex from '@iktakahiro/markdown-it-katex'
-import katex from 'katex'
-import hljs from 'highlight.js'
+import mdKatex from 'markdown-it-katex';
+import hljs from 'highlight.js';
+import katex from 'katex';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -643,6 +644,8 @@ ipcMain.on('export-to-pdf', async (event, data) => {
     dialog.showErrorBox('Error during PDF export', error.message);
   }
 });
+
+
 ipcMain.handle('create-notes', async (event, folderName, noteName) => {
   try {
     const folderPath = path.join(MARKY_FOLDER, folderName);

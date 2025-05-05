@@ -363,6 +363,7 @@ function App() {
                   element={
                     <Editor
                       handleExportPDF={handleExportPDF}
+                      onCreateNewNote={createNewNote}
                       showNotesBar={showNotesBar}
                       linkFolderName={linkFolderName}
                       getAllNotes={getAllNotes}
@@ -382,6 +383,7 @@ function App() {
                   element={
                     <Editor
                       handleExportPDF={handleExportPDF}
+                      onCreateNewNote={createNewNote}
                       getAllNotes={getAllNotes}
                       linkFolderName={linkFolderName}
                       showNotesBar={showNotesBar}
@@ -401,6 +403,7 @@ function App() {
                   element={
                     <Editor
                       handleExportPDF={handleExportPDF}
+                      onCreateNewNote={createNewNote}
                       getAllNotes={getAllNotes}
                       linkFolderName={linkFolderName}
                       showNotesBar={showNotesBar}
@@ -420,6 +423,7 @@ function App() {
                   element={
                     <Editor
                       handleExportPDF={handleExportPDF}
+                      onCreateNewNote={createNewNote}
                       getAllNotes={getAllNotes}
                       linkFolderName={linkFolderName}
                       onRenameNote={renameNote}
