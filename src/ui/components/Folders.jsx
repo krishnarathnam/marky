@@ -3,8 +3,10 @@ import SideBarFolder from './SideBarFolder';
 import { Folder } from 'lucide-react';  // Assuming you're using react-icons for the Folder icon
 import { ChevronRight, ChevronDown } from 'lucide-react';
 
-export default function Folders({ onDeleteFolder, openModal, folders }) {
+export default function Folders({ folderNoteCounts, onDeleteFolder, openModal, folders }) {
   const [showFolders, setShowFolders] = useState(true);
+  const [noteCount, setNoteCount] = useState(0);
+
 
   function handleHideFolders() {
     setShowFolders(!showFolders)
@@ -24,14 +26,16 @@ export default function Folders({ onDeleteFolder, openModal, folders }) {
 
           <div className="ml-8 space-y-2 max-h-[calc(100vh-500px)] overflow-y-auto">
             {folders.map((folder) => {
+              const count = folderNoteCounts?.[folder] || 0;
               return (
                 <SideBarFolder
                   to={`/folder/${folder.toLowerCase()}`}
                   key={crypto.randomUUID()}
-                  icon={<Folder size={16} />}
+                  icon={<Folder size={18} />}
                   label={folder}
                   onDeleteFolder={onDeleteFolder}
                   folder={folder}
+                  count={count}
                 />
               );
             })}

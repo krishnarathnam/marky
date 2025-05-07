@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import NotesBar from "./NotesBar";
-import MarkDownEditor from "./MarkDownEditor";
 import { AnimatePresence, motion } from 'motion/react'
-import { useLocation, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import MarkDownContainer from "./MarkDownContainer";
 
 export default function Editor({ onCreateNewNote, handleExportPDF, linkFolderName, showNotesBar, getAllNotes, onToggleImportant, setAllNotes, onDeleteNote, onRenameNote, openModal, onSaveNote, notes, setLinkFolderName }) {
@@ -10,16 +9,9 @@ export default function Editor({ onCreateNewNote, handleExportPDF, linkFolderNam
   const { LinkFolderName } = useParams();
   const [selectedNote, setSelectedNote] = useState('');
 
-  const location = useLocation();
-  useEffect(() => {
-    if (location.pathname === '/category/all' || location.pathname === '/category/recent') {
-      getAllNotes();
-    }
-  }, [location]);
-
   useEffect(() => {
     setLinkFolderName(LinkFolderName);
-  }, [LinkFolderName])
+  }, [LinkFolderName, setLinkFolderName])
 
 
   return (
@@ -53,7 +45,7 @@ export default function Editor({ onCreateNewNote, handleExportPDF, linkFolderNam
       <motion.div
         layout
         transition={{ duration: 0.3 }}
-        className="flex-1"
+        className="flex-1 max-h-screen overflow-y-scroll"
       >
         <MarkDownContainer onSaveNote={onSaveNote} selectedNote={selectedNote} />
       </motion.div>

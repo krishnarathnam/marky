@@ -1,5 +1,4 @@
 import { app, BrowserWindow, ipcMain, dialog } from 'electron';
-import { marked } from 'marked';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -9,6 +8,7 @@ import matter from 'gray-matter';
 import Store from 'electron-store'
 import MarkdownIt from 'markdown-it';
 import mdKatex from 'markdown-it-katex';
+import taskLists from 'markdown-it-task-lists';
 import hljs from 'highlight.js';
 import katex from 'katex';
 
@@ -29,6 +29,8 @@ function createWindow() {
     height: 800,
     autoHideMenuBar: true,
     icon: path.join(__dirname, 'public', 'logo.ico'),
+    //frame: false,
+    //titleBarStyle: 'hidden',
     webPreferences: {
       preload: preloadPath,
       contextIsolation: true,
@@ -47,7 +49,6 @@ function createWindow() {
       mainWindow.webContents.send('show-username-prompt');
     });
   }
-
 }
 
 ipcMain.handle('save-username', async (event, username) => {
@@ -81,7 +82,6 @@ function ensureMarkyFolder() {
     });
 }
 
-// Add all IPC handlers before the app is ready
 ipcMain.handle('create-subfolder', async (event, folderName) => {
   try {
     const subfolderPath = path.join(MARKY_FOLDER, folderName);
@@ -254,9 +254,7 @@ ipcMain.handle('write-notes', async (event, folderName, noteName, content) => {
   }
 });
 
-// Preprocess KaTeX math delimiters
 function preprocessKaTeX(md) {
-  // Handle block math first (must come before inline to avoid conflict)
   md = md.replace(/\$\$([\s\S]+?)\$\$/g, (_, expr) => {
     try {
       return katex.renderToString(expr, { displayMode: true, throwOnError: false });
@@ -264,20 +262,24 @@ function preprocessKaTeX(md) {
       return `<pre>${expr}</pre>`;
     }
   });
-  // Handle inline math with single dollar signs: $...$
+
   md = md.replace(/(?<!\$)\$(?!\$)(.+?)(?<!\$)\$(?!\$)/g, (_, expr) => {
+    const trimmed = expr.trim();
+
+    if (/^[.]+$/.test(trimmed)) {
+      return `<code>${trimmed}</code>`;
+    }
+
     try {
       return katex.renderToString(expr, { displayMode: false, throwOnError: false });
     } catch (e) {
-      return `<code>${expr}</code>`;
+      return `<code>${trimmed}</code>`;
     }
   });
   return md;
 }
 
-// Process mermaid code blocks specifically
 function processMermaidBlocks(html) {
-  // Replace any mermaid code blocks with properly formatted divs
   return html.replace(/<pre><code class="language-mermaid">([\s\S]+?)<\/code><\/pre>/g,
     (_, content) => {
       const escapedContent = content
@@ -292,10 +294,8 @@ function processMermaidBlocks(html) {
   );
 }
 
-// this is the main function
 async function generatePdf(htmlContent, fileName) {
   try {
-    // Create an offscreen browser window for rendering
     const exportWin = new BrowserWindow({
       width: 1000,
       height: 800,
@@ -309,7 +309,6 @@ async function generatePdf(htmlContent, fileName) {
       }
     });
 
-    // Build the complete HTML with all required libraries and styles
     const fullHtml = `
       <!DOCTYPE html>
       <html>
@@ -492,23 +491,18 @@ async function generatePdf(htmlContent, fileName) {
       </html>
     `;
 
-    // Log renderer console messages
     exportWin.webContents.on('console-message', (event, level, message) => {
       console.log(`Renderer log [${level}]: ${message}`);
     });
 
-    // Load the HTML content
     await exportWin.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(fullHtml)}`);
 
-    // Wait for rendering to complete with timeout
     await new Promise((resolve) => {
-      // Set a maximum wait time of 8 seconds
       const timeout = setTimeout(() => {
         console.log('PDF rendering timeout reached (8s), proceeding anyway');
         resolve();
       }, 8000);
 
-      // Listen for the rendering complete message
       const handleMessage = (event, channel) => {
         if (channel === 'RENDERING_COMPLETE') {
           console.log('Received rendering complete signal');
@@ -520,7 +514,6 @@ async function generatePdf(htmlContent, fileName) {
 
       exportWin.webContents.on('ipc-message', handleMessage);
 
-      // Setup the message handler in the renderer
       exportWin.webContents.on('did-finish-load', () => {
         exportWin.webContents.executeJavaScript(`
           // Define electronAPI if it doesn't exist (for older Electron versions)
@@ -540,20 +533,16 @@ async function generatePdf(htmlContent, fileName) {
       });
     });
 
-    // Add a small buffer time to ensure everything is settled
     await new Promise(resolve => setTimeout(resolve, 500));
 
-    // Show save dialog
     const defaultFileName = fileName.toLowerCase().endsWith('.pdf') ? fileName : `${fileName}.pdf`;
     const saveResult = await dialog.showSaveDialog({
       defaultPath: defaultFileName,
       filters: [{ name: 'PDF Files', extensions: ['pdf'] }],
     });
 
-    // If user selected a path, save the PDF
     const filePath = saveResult.filePath;
     if (filePath) {
-      // Generate PDF
       const pdfBuffer = await exportWin.webContents.printToPDF({
         printBackground: true,
         pageSize: 'A4',
@@ -565,7 +554,6 @@ async function generatePdf(htmlContent, fileName) {
         preferCSSPageSize: false
       });
 
-      // Save PDF to file
       await fs.writeFile(filePath, pdfBuffer);
       console.log(`PDF saved successfully to: ${filePath}`);
       return { success: true, path: filePath };
@@ -574,7 +562,6 @@ async function generatePdf(htmlContent, fileName) {
       return { success: false, cancelled: true };
     }
 
-    // Clean up
     exportWin.destroy();
 
   } catch (err) {
@@ -583,7 +570,6 @@ async function generatePdf(htmlContent, fileName) {
   }
 }
 
-// Electron IPC handler
 ipcMain.on('export-to-pdf', async (event, data) => {
   try {
     console.log("Starting enhanced PDF export with data:", typeof data, Object.keys(data));
@@ -593,14 +579,11 @@ ipcMain.on('export-to-pdf', async (event, data) => {
       ? data.fileName
       : 'document.pdf';
 
-    // Configure markdown-it with KaTeX support
     const md = new MarkdownIt({
       html: true,
       highlight: function(str, lang) {
-        // Special handling for mermaid - don't highlight it
         if (lang === 'mermaid') return str;
 
-        // Syntax highlighting for other languages
         if (lang && hljs.getLanguage(lang)) {
           try {
             return hljs.highlight(str, { language: lang }).value;
@@ -608,24 +591,21 @@ ipcMain.on('export-to-pdf', async (event, data) => {
             console.error('Highlight error:', err);
           }
         }
-        return ''; // Use external default escaping
+        return '';
       }
     }).use(mdKatex, {
       throwOnError: false,
       strict: false,
-      output: 'mathml', // For better PDF rendering
-    });
+      output: 'html',
+    }).use(taskLists, { enabled: true, label: true });
 
-    // Process markdown to HTML
     let htmlContent;
     if (content && typeof content === 'object' && content.content) {
-      // Use matter to parse the content, and then preprocess KaTeX
       const { content: mdContent } = matter(content.content);
       const preprocessedContent = preprocessKaTeX(mdContent);
       htmlContent = md.render(preprocessedContent);
 
     } else if (typeof content === 'string') {
-      // If content is a string, preprocess it directly
       const preprocessedContent = preprocessKaTeX(content);
       htmlContent = md.render(preprocessedContent);
     } else {

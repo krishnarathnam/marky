@@ -1,0 +1,300 @@
+csspart
+.wmde-markdown ul,
+.w-md-editor-preview ul,
+.markdown-body ul {
+  list-style-type: disc !important;
+  padding-left: 2em !important;
+  margin-top: 1em !important;
+  margin-bottom: 1em !important;
+}
+
+.wmde-markdown ol,
+.w-md-editor-preview ol,
+.markdown-body ol {
+  list-style-type: decimal !important;
+  padding-left: 2em !important;
+  margin-top: 1em !important;
+  margin-bottom: 1em !important;
+}
+
+.wmde-markdown li,
+.w-md-editor-preview li,
+.markdown-body li {
+  margin-bottom: 0.5em !important;
+  display: list-item !important;
+}
+
+.wmde-markdown li::marker,
+.w-md-editor-preview li::marker,
+.markdown-body li::marker {
+  color: var(--color-dim-gray);
+}
+
+
+/* Inline KaTeX styles */
+.wmde-markdown-var .katex {
+  display: inline-block !important;
+  margin: 0 0.2em;
+  text-rendering: auto;
+  font-size: 1em;
+}
+
+.wmde-markdown-var .katex-display {
+  display: block !important;
+  margin: 1em 0;
+  text-align: center;
+}
+
+/* Fix inline math vertical alignment */
+.wmde-markdown-var .katex .base {
+  margin-top: 2px;
+}
+
+.w-md-editor-toolbar {
+  justify-content: center !important;
+  margin-top: 0.5rem !important;
+  border-radius: 8px !important;
+  background-color: #ededed !important;
+  width: fit-content !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding: 6px 12px !important;
+}
+
+.w-md-editor-preview img {
+  display: block !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  max-width: 100% !important;
+  border-radius: 5px !important;
+  padding-bottom: 15px;
+}
+@media (max-width: 1130px) {
+  .w-md-editor-toolbar {
+    justify-content: space-around !important;
+    padding: 8px 4px !important;
+  }
+
+  .w-md-editor-toolbar button > svg {
+    width: 10px !important;
+  }
+}
+.w-md-editor-preview .katex-display {
+  background-color: #f5f5f5 !important;  /* Light gray background */
+  padding: 20px !important;
+  border-radius: 6px !important;
+  overflow-x: auto;
+  display: block !important;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.w-md-editor-preview .mermaid {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  justify-content: center;
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-radius: 8px;
+  max-width: 90%;
+}
+
+
+
+
+import React, { useEffect, useState, useCallback } from 'react'
+import MDEditor from '@uiw/react-md-editor';
+import mermaid from 'mermaid';
+import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import { Eye, SquareSplitHorizontal, Pencil } from 'lucide-react';
+import "@uiw/react-md-editor/markdown-editor.css";
+import "@uiw/react-markdown-preview/markdown.css";
+import 'katex/dist/katex.min.css';
+
+const initialMarkdown = `# Mermaid + KaTeX Example
+
+## Mermaid Diagram
+
+\`\`\`mermaid
+graph TD;
+ A[Start] --> B{Is it working?};
+ B -- Yes --> C[Great!];
+ B -- No --> D[Check code];
+\`\`\`
+
+## Math Example
+
+Inline: $E = mc^2$
+
+Block:
+
+$$
+a^2 + b^2 = c^2
+$$
+
+## Task List
+
+- [ ] Unchecked task
+- [x] Checked task
+- [ ] Another task
+`;
+
+export default function MarkDownEditor({ onSaveNote, selectedNote }) {
+  const [value, setValue] = useState(selectedNote ? selectedNote.content : initialMarkdown);
+  const [preview, setPreview] = useState('edit');
+
+  useEffect(() => {
+    if (selectedNote) {
+      setValue(selectedNote.content);
+    }
+  }, [selectedNote?.name, selectedNote?.folderName]);
+
+  function changePreview(mode) {
+    setPreview(prev => (prev === 'edit' ? mode : 'edit'));
+  }
+
+  // Function to handle checkbox toggling
+  const handleCheckboxToggle = useCallback(() => {
+    if (preview === 'edit') return;
+
+    // Add event listener to the preview container
+    const previewContainer = document.querySelector('.w-md-editor-preview');
+    if (!previewContainer) return;
+
+    const handleClick = (e) => {
+      // Check if the clicked element is a checkbox input
+      if (e.target && e.target.tagName === 'INPUT' && e.target.type === 'checkbox') {
+        e.preventDefault(); // Prevent default behavior
+
+        // Get the checkbox's text content
+        const listItem = e.target.closest('li');
+        if (!listItem) return;
+
+        const text = listItem.textContent.trim();
+
+        // Find this text in the markdown and toggle the checkbox state
+        const lines = value.split('\n');
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          // Check if this line contains the task item
+          if (line.includes('- [ ]') && text.includes(line.replace('- [ ]', '').trim())) {
+            // Change unchecked to checked
+            lines[i] = line.replace('- [ ]', '- [x]');
+            const newValue = lines.join('\n');
+            setValue(newValue);
+            if (onSaveNote && selectedNote) {
+              onSaveNote(selectedNote.folderName, newValue, selectedNote.name);
+            }
+            break;
+          } else if (line.includes('- [x]') && text.includes(line.replace('- [x]', '').trim())) {
+            // Change checked to unchecked
+            lines[i] = line.replace('- [x]', '- [ ]');
+            const newValue = lines.join('\n');
+            setValue(newValue);
+            if (onSaveNote && selectedNote) {
+              onSaveNote(selectedNote.folderName, newValue, selectedNote.name);
+            }
+            break;
+          }
+        }
+      }
+    };
+
+    // Add the event listener
+    previewContainer.addEventListener('click', handleClick);
+
+    // Clean up the event listener
+    return () => {
+      previewContainer.removeEventListener('click', handleClick);
+    };
+  }, [value, preview, onSaveNote, selectedNote]);
+
+  useEffect(() => {
+    if (preview === 'edit') return;
+
+    // Cleanup previous Mermaid containers
+    const oldWrappers = document.querySelectorAll('.mermaid-wrapper');
+    oldWrappers.forEach(wrapper => wrapper.remove());
+
+    mermaid.initialize({ startOnLoad: false });
+
+    const mermaidBlocks = document.querySelectorAll('pre > code.language-mermaid');
+
+    mermaidBlocks.forEach((codeBlock, i) => {
+      const pre = codeBlock.parentElement;
+      const containerId = `mermaid-${i}`;
+
+      if (document.getElementById(containerId)) return;
+
+      const container = document.createElement('div');
+      container.className = 'mermaid';
+      container.id = containerId;
+      container.innerHTML = codeBlock.textContent;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'mermaid-wrapper'; // Used for cleanup
+      wrapper.style.display = 'flex';
+      wrapper.style.justifyContent = 'center';
+      wrapper.style.margin = '1rem 0';
+      wrapper.appendChild(container);
+
+      pre.style.display = 'none';
+      pre.parentElement.insertBefore(wrapper, pre.nextSibling);
+
+      try {
+        mermaid.init(undefined, `#${containerId}`);
+      } catch (err) {
+        container.innerHTML = `<pre style="color: red;">Mermaid error: ${err.message}</pre>`;
+      }
+    });
+
+    // Setup checkbox handlers
+    handleCheckboxToggle();
+  }, [value, preview, handleCheckboxToggle]);
+
+  return (
+    <div data-color-mode="light" className="h-screen flex flex-col">
+      <div className="flex-1 h-screen">
+        <MDEditor
+          value={value}
+          onChange={(newValue) => {
+            setValue(newValue);
+            if (onSaveNote && selectedNote) {
+              onSaveNote(selectedNote.folderName, newValue, selectedNote.name);
+            }
+          }}
+          preview={preview}
+          height="100%"
+          className="custom-md-editor"
+          commandsFilter={(cmd) => {
+            if (/(edit|live|preview)/.test(cmd.name)) {
+              return false;
+            }
+            return cmd;
+          }}
+          previewOptions={{
+            remarkPlugins: [remarkMath, remarkGfm],
+            rehypePlugins: [[rehypeKatex, {
+              strict: false,
+              output: 'html'
+            }]],
+          }}
+        />
+      </div>
+
+      <div className="fixed bottom-5 right-5 flex flex-col items-center justify-center rounded-md bg-gray-100 border border-gray-300 cursor-pointer z-10 p-0.5">
+        <button onClick={() => changePreview('preview')} className="hover:bg-gray-200 m-2">
+          {preview === 'edit' ? <Eye className="text-gray-700" size={19} /> : <Pencil className="text-gray-700" size={19} />}
+        </button>
+        <button onClick={() => changePreview('live')} className="hover:bg-gray-200 m-1">
+          <SquareSplitHorizontal size={19} className="text-gray-700" />
+        </button>
+      </div>
+    </div>
+  );
+}

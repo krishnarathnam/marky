@@ -21,6 +21,7 @@ function App() {
   const [appReady, setAppReady] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
   const [showNotesBar, setShowNotesBar] = useState(true);
+  const [folderNoteCounts, setFoulderNoteCounts] = useState(0);
 
   const importantNotes = (allNotes || []).filter((note) => note.isImportant);
 
@@ -29,6 +30,19 @@ function App() {
     const bDate = new Date(b.lastModified);
     return bDate - aDate;
   });
+
+  function handleFoulderNoteCount() {
+    setFoulderNoteCounts(folders.reduce((acc, folder) => {
+      acc[folder] = allNotes.filter(note => note.folderName === folder).length;
+      return acc;
+    }, {}))
+  }
+
+
+  //const folderNoteCount = folders.reduce((acc, folder) => {
+  //  acc[folder] = allNotes.filter(note => note.folderName === folder).length;
+  //  return acc;
+  // }, {});
 
   async function createNewFolder() {
     try {
@@ -162,6 +176,7 @@ function App() {
       if (response.success) {
         fetchNotes();
         setModalOpen(false);
+        handleFoulderNoteCount();
       } else {
         alert(`Error: ${response.error}`);
       }
@@ -176,6 +191,7 @@ function App() {
       const response = await window.electron.deleteNote(linkFolderName, noteName);
       if (response.success) {
         fetchNotes();
+        handleFoulderNoteCount();
       } else {
         alert(`Error: ${response.error}`);
       }
@@ -237,6 +253,14 @@ function App() {
       window.electron.ipcRenderer.removeAllListeners("show-username-prompt");
     };
   }, []);
+
+  useEffect(() => {
+    getAllNotes();
+  }, [])
+
+  useEffect(() => {
+    handleFoulderNoteCount();
+  }, [folders, allNotes])
 
   useEffect(() => {
     if (linkFolderName === undefined) {
@@ -333,7 +357,7 @@ function App() {
                 <motion.div
                   key="sidebar"
                   initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: 220, opacity: 1 }}
+                  animate={{ width: "auto", opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
                   transition={{ duration: 0.3 }}
                   className="flex-shrink-0 overflow-hidden"
@@ -346,6 +370,7 @@ function App() {
                     openModal={openModal}
                     setFolders={setFolders}
                     folders={folders}
+                    folderNoteCounts={folderNoteCounts}
                   />
                 </motion.div>
               )}

@@ -1,9 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
-import SearchBar from "./SearchBar";
+import React, { useEffect, useState } from "react";
 import { AnimatePresence, LayoutGroup, motion } from 'framer-motion';
+import SearchBar from "./SearchBar";
+import CreateNoteModal from "./CreateNoteModal";
 import Notes from "./Notes";
 
-export default function NotesBar({ onCreateNewNote, handleExportPDF, linkFolderName, onToggleImportant, onRenameNote, onDeleteNote, openModal, notes, onSelectedNote }) {
+export default function NotesBar({ onCreateNewNote, handleExportPDF, linkFolderName, onToggleImportant, onRenameNote, onDeleteNote, notes, onSelectedNote }) {
   const [openToolbarIndex, setOpenToolbarIndex] = useState(null);
   const [sortedNotes, setSortedNotes] = useState([]);
   const [isSorted, setIsSorted] = useState(false);
@@ -26,21 +27,6 @@ export default function NotesBar({ onCreateNewNote, handleExportPDF, linkFolderN
   }
   function handleSort() {
     setIsSorted(!isSorted);
-  }
-
-  function getNowTime() {
-    const now = new Date();
-    const formatted = now.toLocaleString("en-US", {
-      month: "numeric",
-      day: "numeric",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true
-    });
-
-    return formatted;
   }
 
   function isCreatingNewNote() {
@@ -97,6 +83,9 @@ export default function NotesBar({ onCreateNewNote, handleExportPDF, linkFolderN
         />
 
         <hr className="border-border" />
+        {creatingNote && (
+          <CreateNoteModal setNewNoteName={setNewNoteName} handleNewNoteSubmit={handleNewNoteSubmit} />
+        )}
         <div className="text-black font-bold text-sm justify-center">
           <p >No Notes Available.. Create one.</p>
         </div>
@@ -117,42 +106,20 @@ export default function NotesBar({ onCreateNewNote, handleExportPDF, linkFolderN
           />
           <hr className="border-border" />
         </div>
-        <AnimatePresence>
+        <LayoutGroup>
           {creatingNote && (
-            <motion.form
-              onSubmit={handleNewNoteSubmit}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              layout // allows layout animation
-            >
-              <div className="border-border p-2 border-b-1">
-                <div className="text-xs flex justify-between text-note-teriary mb-2">
-                  <div>Created at: {getNowTime()}</div>
-                </div>
-                <div className="text-base mb-3 font-semibold text-note-primary">
-                  <input
-                    type="text"
-                    onChange={(e) => setNewNoteName(e.target.value)}
-                    className="border-border border-1 rounded-sm"
-                    autoFocus
-                  />
-                </div>
-                <div className="text-sm text-note-secondary pt-1.5 truncate"></div>
-              </div>
-            </motion.form>
+            <CreateNoteModal setNewNoteName={setNewNoteName} handleNewNoteSubmit={handleNewNoteSubmit} />
           )}
-        </AnimatePresence>
-        <AnimatePresence>
-          <motion.div className={`flex-1 overflow-y-scroll transition-opacity duration-300 scrollbar-hidden`}>
+          <AnimatePresence>
             {filteredNotes.map((note, index) => (
               <motion.div
                 key={note.name}
-                layout // <-- Enables layout transition
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 0.2, ease: "easeInOut" }} // smoother transition
+                layout
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="w-full "
               >
                 <Notes
                   handleExportPDF={handleExportPDF}
@@ -167,15 +134,14 @@ export default function NotesBar({ onCreateNewNote, handleExportPDF, linkFolderN
                   index={index}
                   onSelectedNote={onSelectedNote}
                   isToolbarOpen={openToolbarIndex === index}
-                  onToggleToolbar={(e) => {
-                    e.stopPropagation();
-                    setOpenToolbarIndex(openToolbarIndex === index ? null : index);
+                  onToggleToolbar={(indexToToggle) => {
+                    setOpenToolbarIndex(prev => prev === indexToToggle ? null : indexToToggle);
                   }}
                 />
               </motion.div>
             ))}
-          </motion.div>
-        </AnimatePresence>
+          </AnimatePresence>
+        </LayoutGroup >
       </div >
     </>
   );

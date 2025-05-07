@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { NavLink } from 'react-router'
 import { Trash2 } from 'lucide-react'
 
-export default function SideBarFolder({ folder, icon, label, to, onDeleteFolder }) {
+export default function SideBarFolder({ count, folder, icon, label, to, onDeleteFolder }) {
 
   const [hovered, setHovered] = useState(false)
 
@@ -21,7 +21,7 @@ export default function SideBarFolder({ folder, icon, label, to, onDeleteFolder 
           {label}
         </div>
         <button className='mr-4' onClick={() => onDeleteFolder(folder)}>
-          {hovered && <Trash2 size={16} />}
+          {hovered ? < Trash2 size={16} /> : count}
         </button>
       </div>
     </NavLink>
