@@ -17,20 +17,20 @@ const __dirname = dirname(__filename);
 
 const MARKY_FOLDER = path.join(os.homedir(), 'marky');
 const store = new Store();
+let mainWindow;
 
 function createWindow() {
-  // Log the preload path to verify it's correct
   const preloadPath = path.resolve(__dirname, 'preload.js');
   console.log('Looking for preload script at:', preloadPath);
   console.log('File exists:', fs.existsSync(preloadPath));
 
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1280,
     height: 800,
     autoHideMenuBar: true,
-    icon: path.join(__dirname, 'public', 'logo.ico'),
-    //frame: false,
-    //titleBarStyle: 'hidden',
+    icon: path.join(process.cwd(), 'public', 'logo.ico'),
+    titleBarStyle: 'hidden',
+    frame: false,
     webPreferences: {
       preload: preloadPath,
       contextIsolation: true,
@@ -50,6 +50,26 @@ function createWindow() {
     });
   }
 }
+
+ipcMain.on('window-minimize', () => {
+  if (mainWindow) mainWindow.minimize();
+  console.log('Minimized');
+});
+
+ipcMain.on('window-maximize', () => {
+  if (mainWindow) {
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+    } else {
+      mainWindow.maximize();
+    }
+  }
+});
+
+ipcMain.on('window-close', () => {
+  if (mainWindow) mainWindow.close();
+  console.log('closed');
+});
 
 ipcMain.handle('save-username', async (event, username) => {
   store.set('username', username);
@@ -159,10 +179,8 @@ ipcMain.handle('delete-folder', async (event, folderName) => {
 
 ipcMain.handle('get-folders', async () => {
   try {
-    // Use fs-extra's readdir which returns a promise
     const files = await fs.readdir(MARKY_FOLDER);
 
-    // Process the files to find directories
     const folders = [];
     for (const file of files) {
       const filePath = path.join(MARKY_FOLDER, file);

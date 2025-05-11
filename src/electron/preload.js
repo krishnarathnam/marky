@@ -21,7 +21,13 @@ contextBridge.exposeInMainWorld('electron', {
     on: (channel, callback) => ipcRenderer.on(channel, callback),
     removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel),
   },
-
   exportToPDF: (data) => ipcRenderer.send('export-to-pdf', data),
-  sendMessage: (message) => ipcRenderer.send(message)
+  sendMessage: (message) => ipcRenderer.send(message),
+  send: (channel, data) => {
+    // Whitelist channels
+    const validChannels = ['window-minimize', 'window-maximize', 'window-close'];
+    if (validChannels.includes(channel)) {
+      ipcRenderer.send(channel, data);
+    }
+  },
 });

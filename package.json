@@ -1,7 +1,7 @@
 {
   "name": "marky",
   "private": true,
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Marky - simple note-taking app with markdown.",
   "author": "Krishna Rathnam",
   "license": "MIT",
@@ -23,7 +23,7 @@
       "src/electron/**"
     ],
     "win": {
-      "icon": "build/icons/logo.ico"
+      "icon": "assets/icons/icon.ico"
     },
     "directories": {
       "buildResources": "assets"

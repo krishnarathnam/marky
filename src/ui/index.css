@@ -21,139 +21,128 @@ body,
     padding: 0;
 }
 
-.markdown-preview {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  line-height: 1.6;
-  color: #333;
+/* Add these new styles */
+.w-md-editor {
+  overflow: hidden !important;
+  height: 95% !important;
 }
 
-.markdown-preview h1 {
-  font-size: 2em;
-  margin-top: 0.67em;
-  margin-bottom: 0.67em;
-  font-weight: bold;
-  border-bottom: 1px solid #eaecef;
-  padding-bottom: 0.3em;
+
+.w-md-editor-text-pre > code,
+.w-md-editor-text-input {
+  height: 100% !important;
+  overflow: auto !important;
 }
 
-.markdown-preview h2 {
-  font-size: 1.5em;
-  margin-top: 0.83em;
-  margin-bottom: 0.83em;
-  font-weight: bold;
-  border-bottom: 1px solid #eaecef;
-  padding-bottom: 0.3em;
+.custom-md-editor {
+  height: 95% !important;
+  overflow: hidden !important;
 }
 
-.markdown-preview h3 {
-  font-size: 1.17em;
-  margin-top: 1em;
-  margin-bottom: 1em;
-  font-weight: bold;
+
+/* Fix preview mode scrolling */
+.w-md-editor-preview {
+  box-sizing: border-box !important;
+  padding: 1rem !important;
+  overflow-y: auto !important;
+  height: 100% !important;
 }
 
-.markdown-preview h4 {
+.wmde-markdown ul,
+.w-md-editor-preview ul,
+.markdown-body ul {
+  list-style-type: disc !important;
+  padding-left: 2em !important;
+  margin-top: 1em !important;
+  margin-bottom: 1em !important;
+}
+
+.wmde-markdown ol,
+.w-md-editor-preview ol,
+.markdown-body ol {
+  list-style-type: decimal !important;
+  padding-left: 2em !important;
+  margin-top: 1em !important;
+  margin-bottom: 1em !important;
+}
+
+.wmde-markdown li,
+.w-md-editor-preview li,
+.markdown-body li {
+  margin-bottom: 0.5em !important;
+  display: list-item !important;
+}
+
+.wmde-markdown li::marker,
+.w-md-editor-preview li::marker,
+.markdown-body li::marker {
+  color: var(--color-dim-gray);
+}
+
+
+/* Inline KaTeX styles */
+.wmde-markdown-var .katex {
+  display: inline-block !important;
+  margin: 0 0.2em;
+  text-rendering: auto;
   font-size: 1em;
-  margin-top: 1.33em;
-  margin-bottom: 1.33em;
-  font-weight: bold;
 }
 
-.markdown-preview strong {
-  font-weight: bold;
-}
-
-.markdown-preview em {
-  font-style: italic;
-}
-
-.markdown-preview ul, .markdown-preview ol {
-  padding-left: 2em;
+.wmde-markdown-var .katex-display {
+  display: block !important;
   margin: 1em 0;
+  text-align: center;
 }
 
-.markdown-preview ul {
-  list-style-type: disc;
+/* Fix inline math vertical alignment */
+.wmde-markdown-var .katex .base {
+  margin-top: 2px;
 }
 
-.markdown-preview ol {
-  list-style-type: decimal;
+.w-md-editor-toolbar button > svg {
+  width: 20px !important;
+  height: 13px !important;
 }
 
-.markdown-preview li {
-  margin: 0.5em 0;
+.w-md-editor-preview img {
+  display: block !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  max-width: 100% !important;
+  border-radius: 5px !important;
+  padding-bottom: 15px;
 }
 
-.markdown-preview a {
-  color: #0366d6;
-  text-decoration: none;
+@media (max-width: 1130px) {
+  .w-md-editor-toolbar {
+    padding: 8px 4px !important;
+  }
+
+  .w-md-editor-toolbar button > svg {
+    width: 10px !important;
+  }
+}
+.w-md-editor-preview .katex-display {
+  background-color: #f5f5f5 !important;  /* Light gray background */
+  padding: 20px !important;
+  border-radius: 6px !important;
+  overflow-x: auto;
+  display: block !important;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
-.markdown-preview a:hover {
-  text-decoration: underline;
-}
-
-.markdown-preview code {
-  font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
-  padding: 0.2em 0.4em;
-  margin: 0;
-  font-size: 85%;
-  background-color: rgba(27, 31, 35, 0.05);
-  border-radius: 3px;
-}
-
-.markdown-preview pre {
-  background-color: #f6f8fa;
-  border-radius: 3px;
-  padding: 16px;
-  overflow: auto;
-  font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;
-}
-
-.markdown-preview blockquote {
-  padding: 0 1em;
-  color: #6a737d;
-  border-left: 0.25em solid #dfe2e5;
-  margin: 1em 0;
-}
-
-.markdown-preview table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 1em 0;
-}
-
-.markdown-preview table th, .markdown-preview table td {
-  padding: 6px 13px;
-  border: 1px solid #dfe2e5;
-}
-
-.markdown-preview table tr {
-  background-color: #fff;
-  border-top: 1px solid #c6cbd1;
-}
-
-.markdown-preview table tr:nth-child(2n) {
-  background-color: #f6f8fa;
-}
-
-.markdown-preview hr {
-  height: 0.25em;
-  padding: 0;
-  margin: 24px 0;
-  background-color: #e1e4e8;
-  border: 0;
-}
-
-.markdown-preview img {
-  max-width: 100%;
-  box-sizing: content-box;
-  border-radius: 10px;
+.w-md-editor-preview .mermaid {
   display: block;
-  margin: 0 auto;
-  margin-top: 10px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  justify-content: center;
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-radius: 8px;
+  max-width: 90%;
 }
-
 
 ::-webkit-scrollbar {
   width: 9px;
@@ -184,6 +173,11 @@ body,
 .scrollbar-visible::-webkit-scrollbar-thumb {
   background-color: #fafafa;
   border-radius: 3px;
+}
+
+/* Hide vertical scrollbar in editor preview and textarea */
+.w-md-editor::-webkit-scrollbar {
+  display: none;
 }
 
 @theme {

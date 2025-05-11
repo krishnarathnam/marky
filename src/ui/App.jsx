@@ -38,12 +38,6 @@ function App() {
     }, {}))
   }
 
-
-  //const folderNoteCount = folders.reduce((acc, folder) => {
-  //  acc[folder] = allNotes.filter(note => note.folderName === folder).length;
-  //  return acc;
-  // }, {});
-
   async function createNewFolder() {
     try {
       const response = await window.electron.createSubfolder(folderName);

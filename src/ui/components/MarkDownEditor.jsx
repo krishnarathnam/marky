@@ -1,760 +1,193 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react'
-import CodeMirror from '@uiw/react-codemirror';
-import { EditorView } from '@codemirror/view';
-import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
-import { languages } from '@codemirror/language-data';
-import remarkParse from 'remark-parse';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import remarkRehype from 'remark-rehype';
-import rehypeRaw from 'rehype-raw';
-import rehypeKatex from 'rehype-katex';
-import rehypeStringify from 'rehype-stringify';
-import rehypeHighlight from 'rehype-highlight';
-import { unified } from 'unified';
+import React, { useRef, useEffect, useState, useCallback } from 'react'
+import MDEditor from '@uiw/react-md-editor';
 import mermaid from 'mermaid';
-import { Eye, Pencil, SquareSplitHorizontal, Bold, Italic, Heading, Code, Link, List, ListOrdered, ListTodo, Quote, Image as ImageIcon, Strikethrough, Minus } from 'lucide-react';
-
+import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import { Eye, SquareSplitHorizontal, Pencil } from 'lucide-react';
+import "@uiw/react-md-editor/markdown-editor.css";
+import "@uiw/react-markdown-preview/markdown.css";
 import 'katex/dist/katex.min.css';
-import 'highlight.js/styles/github.css';
 
-const initialMarkdown = `# Advanced Markdown Editor
+const initialMarkdown = `# Mermaid + KaTeX Example
 
-This is an enhanced Markdown editor with support for code highlighting, math formulas, and diagrams.
-
-## Code Highlighting
-
-\`\`\`javascript
-function greeting() {
-  console.log("Hello, world!");
-  return "Hello!";
-}
-\`\`\`
-
-## Math with KaTeX
-
-Inline math: $E = mc^2$
-
-Display math:
-
-$$
-\\frac{1}{\\sqrt{2\\pi\\sigma^2}} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}
-$$
-
-## Mermaid Diagrams
+## Mermaid Diagram
 
 \`\`\`mermaid
 graph TD;
   A[Start] --> B{Is it working?};
   B -- Yes --> C[Great!];
-  B -- No --> D[Debug];
-  D --> B;
+  B -- No --> D[Check code];
 \`\`\`
+
+## Math Example
+
+Inline: $E = mc^2$
+
+Block:
+
+$$
+a^2 + b^2 = c^2
+$$
 
 ## Task List
 
-- [ ] Implement code highlighting
-- [ ] Add KaTeX support
-- [ ] Add Mermaid diagram support
-- [ ] Make it take full height of the app
+- [ ] Unchecked task
+- [x] Checked task
+- [ ] Another task
 `;
 
-const TOOLBAR_ACTIONS = [
-  {
-    icon: <Bold size={16} />, title: 'Bold',
-    action: (view) => {
-      const { from, to } = view.state.selection.main;
-      const selected = view.state.sliceDoc(from, to);
-      const replacement = `**${selected || 'bold text'}**`;
-      view.dispatch({ changes: { from, to, insert: replacement } });
-      view.focus();
-    },
-  },
-  {
-    icon: <Italic size={16} />, title: 'Italic',
-    action: (view) => {
-      const { from, to } = view.state.selection.main;
-      const selected = view.state.sliceDoc(from, to);
-      const replacement = `*${selected || 'italic text'}*`;
-      view.dispatch({ changes: { from, to, insert: replacement } });
-      view.focus();
-    },
-  },
-  {
-    icon: <Strikethrough size={16} />, title: 'Strikethrough',
-    action: (view) => {
-      const { from, to } = view.state.selection.main;
-      const selected = view.state.sliceDoc(from, to);
-      const replacement = `~~${selected || 'strikethrough'}~~`;
-      view.dispatch({ changes: { from, to, insert: replacement } });
-      view.focus();
-    },
-  },
-  {
-    icon: <Heading size={16} />, title: 'Heading',
-    action: (view) => {
-      const { from, to } = view.state.selection.main;
-      const selected = view.state.sliceDoc(from, to);
-      const replacement = `# ${selected || 'Heading'}`;
-      view.dispatch({ changes: { from, to, insert: replacement } });
-      view.focus();
-    },
-  },
-  {
-    icon: <Code size={16} />, title: 'Code',
-    action: (view) => {
-      const { from, to } = view.state.selection.main;
-      const selected = view.state.sliceDoc(from, to);
-      const replacement = `\`${selected || 'code'}\``;
-      view.dispatch({ changes: { from, to, insert: replacement } });
-      view.focus();
-    },
-  },
-  {
-    icon: <Link size={16} />, title: 'Link',
-    action: (view) => {
-      const { from, to } = view.state.selection.main;
-      const selected = view.state.sliceDoc(from, to);
-      const replacement = `[${selected || 'link text'}](url)`;
-      view.dispatch({ changes: { from, to, insert: replacement } });
-      view.focus();
-    },
-  },
-  {
-    icon: <List size={16} />, title: 'Unordered List',
-    action: (view) => {
-      const { from, to } = view.state.selection.main;
-      const selected = view.state.sliceDoc(from, to) || 'List item';
-      const lines = selected.split('\n').map(line => line ? `- ${line}` : '- ').join('\n');
-      view.dispatch({ changes: { from, to, insert: lines } });
-      view.focus();
-    },
-  },
-  {
-    icon: <ListOrdered size={16} />, title: 'Ordered List',
-    action: (view) => {
-      const { from, to } = view.state.selection.main;
-      const selected = view.state.sliceDoc(from, to) || 'List item';
-      const lines = selected.split('\n').map((line, i) => line ? `${i + 1}. ${line}` : `${i + 1}. `).join('\n');
-      view.dispatch({ changes: { from, to, insert: lines } });
-      view.focus();
-    },
-  },
-  {
-    icon: <ListTodo size={16} />, title: 'Task List',
-    action: (view) => {
-      const { from, to } = view.state.selection.main;
-      const selected = view.state.sliceDoc(from, to) || 'Task item';
-      const lines = selected.split('\n').map(line => line ? `- [ ] ${line}` : '- [ ] ').join('\n');
-      view.dispatch({ changes: { from, to, insert: lines } });
-      view.focus();
-    },
-  },
-  {
-    icon: <Quote size={16} />, title: 'Quote',
-    action: (view) => {
-      const { from, to } = view.state.selection.main;
-      const selected = view.state.sliceDoc(from, to) || 'Quote';
-      const lines = selected.split('\n').map(line => `> ${line}`).join('\n');
-      view.dispatch({ changes: { from, to, insert: lines } });
-      view.focus();
-    },
-  },
-  {
-    icon: <Minus size={16} />, title: 'Horizontal Line',
-    action: (view) => {
-      const { from, to } = view.state.selection.main;
-      view.dispatch({ changes: { from, to, insert: '\n---\n' } });
-      view.focus();
-    },
-  },
-  {
-    icon: <ImageIcon size={16} />, title: 'Image',
-    action: (view) => {
-      const { from, to } = view.state.selection.main;
-      const selected = view.state.sliceDoc(from, to);
-      const replacement = `![${selected || 'alt text'}](url)`;
-      view.dispatch({ changes: { from, to, insert: replacement } });
-      view.focus();
-    },
-  },
-];
-
-const markdownToHtml = (markdownText) => {
-  try {
-    const result = unified()
-      .use(remarkParse)
-      .use(remarkGfm, {
-        tasklistItem: true,
-        tasklistItemCheckbox: true,
-        stringLength: (str) => str.length
-      })
-      .use(remarkMath)
-      .use(remarkRehype, { 
-        allowDangerousHtml: true,
-        handlers: {
-          taskList: (h, node) => {
-            const list = h(node, 'ul', { className: 'task-list' });
-            list.children = node.children.map((item, index) => {
-              const checkbox = h(
-                'input',
-                {
-                  type: 'checkbox',
-                  checked: item.checked,
-                  disabled: false,
-                  className: 'task-list-item-checkbox',
-                  'data-index': index
-                }
-              );
-              const text = h('span', {}, item.children);
-              return h('li', { className: 'task-list-item' }, [checkbox, text]);
-            });
-            return list;
-          }
-        }
-      })
-      .use(rehypeRaw)
-      .use(rehypeKatex, { strict: false, output: 'html' })
-      .use(rehypeHighlight)
-      .use(rehypeStringify, { allowDangerousHtml: true })
-      .processSync(markdownText);
-    
-    return String(result);
-  } catch (error) {
-    console.error("Error in markdownToHtml:", error);
-    return `<div style="color: red;">Error processing Markdown: ${error instanceof Error ? error.message : 'Unknown error'}</div>`;
-  }
-};
-
-// Higher debounce delay to prevent excessive rendering
-const DEBOUNCE_DELAY = 1000; // 1 second delay for rendering mermaid diagrams
-
-// Create a debounce function
-const debounce = (func, delay) => {
-  let timeoutId;
-  return (...args) => {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-    timeoutId = setTimeout(() => {
-      func(...args);
-    }, delay);
-  };
-};
-
-const MarkDownEditor = ({ onSaveNote, selectedNote }) => {
-  const [markdownValue, setMarkdownValue] = useState(selectedNote ? selectedNote.content : initialMarkdown);
-  const [previewMode, setPreviewMode] = useState('edit');
-  const [editor, setEditor] = useState(null);
-  const previewRef = useRef(null);
-  const editorRef = useRef(null);
-  const renderedDiagramsRef = useRef(new Map()); // Store rendered diagrams
-  const isRenderingRef = useRef(false);
-  const syncingSide = useRef(null);
-  const [isScrollingSynced, setIsScrollingSynced] = useState(false);
-  const renderTimeoutRef = useRef(null);
-  const lastMermaidContentRef = useRef(new Map()); // Track last rendered content for each diagram
-  const pendingRenderRef = useRef(false); // Track if there's a pending render
-
-  const handleChange = useCallback((value) => {
-    setMarkdownValue(value);
-    if (onSaveNote && selectedNote) {
-      onSaveNote(selectedNote.folderName, value, selectedNote.name);
-    }
-  }, [onSaveNote, selectedNote]);
+export default function MarkDownEditor({ onSaveNote, selectedNote }) {
+  const [value, setValue] = useState(selectedNote ? selectedNote.content : initialMarkdown);
+  const [preview, setPreview] = useState('edit');
+  const lastMermaidCodeRef = useRef('');
+  const mermaidCache = useRef(new Map());
 
   useEffect(() => {
     if (selectedNote) {
-      setMarkdownValue(selectedNote.content);
+      setValue(selectedNote.content);
     }
-  }, [selectedNote?.name, selectedNote?.folderName, selectedNote?.content]);
+  }, [selectedNote?.name, selectedNote?.folderName]);
 
-  // Create a debounced function for rendering mermaid diagrams
-  const debouncedRenderMermaid = useCallback(
-    debounce((container) => {
-      if (renderTimeoutRef.current) {
-        clearTimeout(renderTimeoutRef.current);
-      }
-      
-      renderTimeoutRef.current = setTimeout(() => {
-        renderMermaidDiagrams(container);
-        renderTimeoutRef.current = null;
-      }, 100); // Small additional delay for batching
-    }, DEBOUNCE_DELAY),
-    []
-  );
+  function changePreview(mode) {
+    setPreview(prev => (prev === 'edit' ? mode : 'edit'));
+  }
 
-  const renderMermaidDiagrams = async (container) => {
-    if (!container || isRenderingRef.current) return;
-    isRenderingRef.current = true;
-    pendingRenderRef.current = false;
+  // Function to handle checkbox toggling
+  const handleCheckboxToggle = useCallback(() => {
+    if (preview === 'edit') return;
 
-    try {
-      // Initialize mermaid
-      mermaid.initialize({ 
-        startOnLoad: false, 
-        theme: 'default',
-        securityLevel: 'loose',
-        fontFamily: 'monospace'
-      });
-
-      // Find all mermaid code blocks
-      const mermaidBlocks = container.querySelectorAll('pre > code.language-mermaid');
-      let diagramsChanged = false;
-      
-      for (const codeBlock of mermaidBlocks) {
-        const pre = codeBlock.parentElement;
-        const code = codeBlock.textContent;
-        
-        // Skip if code hasn't changed since last render
-        if (lastMermaidContentRef.current.get(pre) === code) {
-          continue;
-        }
-        
-        // Update tracked content
-        lastMermaidContentRef.current.set(pre, code);
-        diagramsChanged = true;
-
-        try {
-          // Hide existing diagram if any
-          const existingWrapper = pre.nextSibling;
-          if (existingWrapper?.classList?.contains('mermaid-wrapper')) {
-            existingWrapper.remove();
-          }
-
-          // Create a temporary div for rendering
-          const tempDiv = document.createElement('div');
-          tempDiv.className = 'mermaid';
-          tempDiv.textContent = code;
-          document.body.appendChild(tempDiv);
-
-          // Render the diagram
-          await mermaid.init(undefined, tempDiv);
-          
-          // Convert to SVG
-          const svg = tempDiv.querySelector('svg');
-          if (svg) {
-            // Create a wrapper for the image
-            const wrapper = document.createElement('div');
-            wrapper.className = 'mermaid-wrapper';
-            wrapper.style.width = '100%';
-            wrapper.style.margin = '0 auto';
-            wrapper.style.maxWidth = '300px';
-            
-            // Create an image from the SVG
-            const img = document.createElement('img');
-            const svgData = new XMLSerializer().serializeToString(svg);
-            const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-            const url = URL.createObjectURL(svgBlob);
-            img.src = url;
-            img.style.width = '100%';
-            img.style.height = 'auto';
-            img.style.minWidth = '100px';
-            img.style.maxWidth = '100%';
-            img.style.display = 'block';
-            
-            wrapper.appendChild(img);
-            pre.style.display = 'none';
-            pre.parentElement.insertBefore(wrapper, pre.nextSibling);
-            
-            // Store the rendered diagram
-            renderedDiagramsRef.current.set(code, wrapper);
-          }
-          
-          // Clean up temporary div
-          document.body.removeChild(tempDiv);
-        } catch (err) {
-          console.error('Mermaid error:', err);
-          const errorDiv = document.createElement('div');
-          errorDiv.style.color = 'red';
-          errorDiv.textContent = `Mermaid Error: ${err.message || 'Failed to render diagram'}`;
-          pre.parentElement.insertBefore(errorDiv, pre.nextSibling);
-        }
-      }
-
-      // Only trigger a state update if diagrams actually changed
-      if (diagramsChanged) {
-        // This empty state update helps React reconcile DOM changes
-        setMarkdownValue(prev => prev);
-      }
-    } finally {
-      isRenderingRef.current = false;
-      
-      // If another render was requested while we were rendering, schedule another one
-      if (pendingRenderRef.current && container) {
-        pendingRenderRef.current = false;
-        setTimeout(() => debouncedRenderMermaid(container), 100);
-      }
-    }
-  };
-
-  // Handle markdown changes with improved debouncing for mermaid rendering
-  useEffect(() => {
-    if (previewMode === 'edit' || !previewRef.current) return;
-    
-    // If already rendering, mark as pending and return
-    if (isRenderingRef.current) {
-      pendingRenderRef.current = true;
-      return;
-    }
-    
-    // Debounce the rendering
-    debouncedRenderMermaid(previewRef.current);
-  }, [markdownValue, previewMode, debouncedRenderMermaid]);
-
-  // Force render diagrams when switching to preview or live mode
-  useEffect(() => {
-    if (previewMode !== 'edit' && previewRef.current) {
-      // Clear mermaid content cache when switching modes to force re-render
-      lastMermaidContentRef.current.clear();
-      setTimeout(() => renderMermaidDiagrams(previewRef.current), 50);
-    }
-  }, [previewMode]);
-
-  // Clean up rendered diagrams when component unmounts
-  useEffect(() => {
-    return () => {
-      renderedDiagramsRef.current.clear();
-      lastMermaidContentRef.current.clear();
-      if (renderTimeoutRef.current) {
-        clearTimeout(renderTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' });
-  }, []);
-
-  useEffect(() => {
-    if (!editor || previewMode !== 'live') return;
-
-    const cmDOM = editor.scrollDOM;
-    const previewDOM = previewRef.current;
-    if (!cmDOM || !previewDOM) return;
-
-    const handleEditorScroll = () => {
-      if (syncingSide.current === 'preview') return;
-      syncingSide.current = 'editor';
-      const ratio = cmDOM.scrollTop / (cmDOM.scrollHeight - cmDOM.clientHeight || 1);
-      previewDOM.scrollTop = ratio * (previewDOM.scrollHeight - previewDOM.clientHeight || 1);
-      requestAnimationFrame(() => { syncingSide.current = null; });
-    };
-
-    const handlePreviewScroll = () => {
-      if (syncingSide.current === 'editor') return;
-      syncingSide.current = 'preview';
-      const ratio = previewDOM.scrollTop / (previewDOM.scrollHeight - previewDOM.clientHeight || 1);
-      cmDOM.scrollTop = ratio * (cmDOM.scrollHeight - cmDOM.clientHeight || 1);
-      requestAnimationFrame(() => { syncingSide.current = null; });
-    };
-
-    cmDOM.addEventListener('scroll', handleEditorScroll, { passive: true });
-    previewDOM.addEventListener('scroll', handlePreviewScroll, { passive: true });
-
-    return () => {
-      cmDOM.removeEventListener('scroll', handleEditorScroll);
-      previewDOM.removeEventListener('scroll', handlePreviewScroll);
-    };
-  }, [editor, previewMode]);
-
-  // Handle resizing of editor - this helps ensure correct scrolling calculations
-  useEffect(() => {
-    if (!editor || !previewRef.current || previewMode !== 'live') return;
-
-    const cmDOM = editor.scrollDOM;
-    const previewDOM = previewRef.current;
-    if (!cmDOM || !previewDOM) return;
-
-    const syncScroll = (sourceDOM, targetDOM) => {
-      if (isScrollingSynced) return;
-      setIsScrollingSynced(true);
-      
-      const sourceScrollRatio = sourceDOM.scrollTop / (sourceDOM.scrollHeight - sourceDOM.clientHeight || 1);
-      const targetScrollTop = sourceScrollRatio * (targetDOM.scrollHeight - targetDOM.clientHeight || 1);
-      
-      targetDOM.scrollTop = targetScrollTop;
-      
-      requestAnimationFrame(() => {
-        setIsScrollingSynced(false);
-      });
-    };
-
-    const handleEditorScroll = () => syncScroll(cmDOM, previewDOM);
-    const handlePreviewScroll = () => syncScroll(previewDOM, cmDOM);
-
-    cmDOM.addEventListener('scroll', handleEditorScroll, { passive: true });
-    previewDOM.addEventListener('scroll', handlePreviewScroll, { passive: true });
-
-    return () => {
-      cmDOM.removeEventListener('scroll', handleEditorScroll);
-      previewDOM.removeEventListener('scroll', handlePreviewScroll);
-    };
-  }, [editor, previewMode, isScrollingSynced]);
-
-  // Handle resizing
-  useEffect(() => {
-    if (!editor || !previewRef.current || previewMode !== 'live') return;
-
-    const cmDOM = editor.scrollDOM;
-    const previewDOM = previewRef.current;
-    if (!cmDOM || !previewDOM) return;
-
-    const syncOnResize = () => {
-      const ratio = cmDOM.scrollTop / (cmDOM.scrollHeight - cmDOM.clientHeight || 1);
-      previewDOM.scrollTop = ratio * (previewDOM.scrollHeight - previewDOM.clientHeight || 1);
-    };
-
-    const resizeObserver = new ResizeObserver(syncOnResize);
-    resizeObserver.observe(cmDOM);
-    resizeObserver.observe(previewDOM);
-
-    return () => resizeObserver.disconnect();
-  }, [editor, previewRef, previewMode]);
-
-  const handleTaskToggle = useCallback((event) => {
-    if (!event.target.matches('input[type="checkbox"]')) return;
-    
-    const checkbox = event.target;
-    const listItem = checkbox.closest('li');
-    if (!listItem) return;
-
-    const taskText = listItem.textContent.trim();
-    const isChecked = checkbox.checked;
-    
-    // Find the corresponding line in the markdown
-    const lines = markdownValue.split('\n');
-    let found = false;
-    
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (line.startsWith('- [ ]') || line.startsWith('- [x]')) {
-        const taskContent = line.substring(5).trim();
-        if (taskContent === taskText) {
-          lines[i] = line.replace(/\[[ x]\]/, `[${isChecked ? 'x' : ' '}]`);
-          found = true;
-          break;
-        }
-      }
-    }
-
-    if (found) {
-      const newMarkdown = lines.join('\n');
-      setMarkdownValue(newMarkdown);
-      if (onSaveNote && selectedNote) {
-        onSaveNote(selectedNote.folderName, newMarkdown, selectedNote.name);
-      }
-    }
-  }, [markdownValue, onSaveNote, selectedNote]);
-
-  // Add click handler to preview container
-  useEffect(() => {
-    const previewContainer = previewRef.current;
+    const previewContainer = document.querySelector('.w-md-editor-preview');
     if (!previewContainer) return;
 
-    const handleClick = (event) => {
-      handleTaskToggle(event);
+    const handleClick = (e) => {
+      if (e.target && e.target.tagName === 'INPUT' && e.target.type === 'checkbox') {
+        e.preventDefault();
+
+        const listItem = e.target.closest('li');
+        if (!listItem) return;
+
+        const text = listItem.textContent.trim();
+        const lines = value.split('\n');
+
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          if (line.includes('- [ ]') && text.includes(line.replace('- [ ]', '').trim())) {
+            lines[i] = line.replace('- [ ]', '- [x]');
+            const newValue = lines.join('\n');
+            setValue(newValue);
+            if (onSaveNote && selectedNote) {
+              onSaveNote(selectedNote.folderName, newValue, selectedNote.name);
+            }
+            break;
+          } else if (line.includes('- [x]') && text.includes(line.replace('- [x]', '').trim())) {
+            lines[i] = line.replace('- [x]', '- [ ]');
+            const newValue = lines.join('\n');
+            setValue(newValue);
+            if (onSaveNote && selectedNote) {
+              onSaveNote(selectedNote.folderName, newValue, selectedNote.name);
+            }
+            break;
+          }
+        }
+      }
     };
 
     previewContainer.addEventListener('click', handleClick);
     return () => {
       previewContainer.removeEventListener('click', handleClick);
     };
-  }, [handleTaskToggle]);
+  }, [value, preview, onSaveNote, selectedNote]);
 
-  // Add styles for task lists
-  useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      .task-list {
-        list-style-type: none;
-        padding-left: 0;
-      }
-      .task-list-item {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin: 4px 0;
-      }
-      .task-list-item-checkbox {
-        margin: 0;
-        cursor: pointer;
-        width: 16px;
-        height: 16px;
-      }
-      .task-list-item-checkbox:checked {
-        accent-color: #2563eb;
-      }
-    `;
-    document.head.appendChild(style);
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
 
-  const editorOptions = {
-    value: markdownValue,
-    onChange: handleChange,
-    height: '100%',
-    basicSetup: {
-      lineNumbers: true,
-      highlightActiveLineGutter: true,
-      highlightSelectionMatches: true,
-      closeBrackets: true,
-      autocompletion: false,
-      rectangularSelection: true,
-      crosshairCursor: true,
-      highlightActiveLine: true,
-      highlightSpecialChars: true,
-      history: true,
-      drawSelection: true,
-      dropCursor: true,
-      allowMultipleSelections: true,
-      indentOnInput: true,
-      bracketMatching: true,
-      lineWrapping: true,
-    },
-    extensions: [
-      EditorView.lineWrapping,
-      EditorView.theme({
-        '&': {
-          backgroundColor: '#fff',
-          color: '#000',
-          height: '100%',
-          minHeight: '100%',
-        },
-        '.cm-content': {
-          padding: '16px',
-          overflow: 'auto',
-          maxHeight: '100%',
-          minHeight: '100%',
-        },
-        '.cm-gutters': {
-          height: '100%',
-          minHeight: '100%',
-        },
-        '.cm-scroller': {
-          overflow: 'auto',
-          height: '100%',
-          display: 'flex',
-        },
-        '.cm-scroller::-webkit-scrollbar': {
-          width: '8px',
-          height: '8px',
-        },
-        '.cm-scroller::-webkit-scrollbar-track': {
-          background: '#f1f1f1',
-        },
-        '.cm-scroller::-webkit-scrollbar-thumb': {
-          background: '#888',
-          borderRadius: '4px',
-        },
-        '.cm-scroller::-webkit-scrollbar-thumb:hover': {
-          background: '#555',
-        },
-      }),
-      markdown({ base: markdownLanguage, codeLanguages: languages }),
-    ],
-    onCreateEditor: (view) => {
-      setEditor(view);
-    },
-  };
+useEffect(() => {
+  if (preview === 'edit') return;
 
-  const handleToolbarClick = (action) => {
-    if (editor) {
-      action(editor);
+  const mermaidBlocks = document.querySelectorAll('pre > code.language-mermaid');
+  if (!mermaidBlocks.length) return;
+
+  mermaid.initialize({ startOnLoad: false });
+
+  mermaidBlocks.forEach((codeBlock, i) => {
+    const currentCode = codeBlock.textContent.trim();
+    const pre = codeBlock.parentElement;
+    const containerId = `mermaid-${i}`;
+
+    // Remove old render if present
+    const existing = document.getElementById(containerId);
+    if (existing) existing.remove();
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'mermaid-wrapper';
+    wrapper.style.display = 'flex';
+    wrapper.style.justifyContent = 'center';
+    wrapper.style.margin = '1rem 0';
+
+    if (mermaidCache.current.has(currentCode)) {
+      wrapper.innerHTML = mermaidCache.current.get(currentCode);
+    } else {
+      const container = document.createElement('div');
+      container.className = 'mermaid';
+      container.id = containerId;
+      container.innerHTML = currentCode;
+      wrapper.appendChild(container);
+
+      try {
+        mermaid.render(containerId, currentCode).then(({ svg }) => {
+          mermaidCache.current.set(currentCode, svg);
+          wrapper.innerHTML = svg;
+        }).catch(err => {
+          container.innerHTML = `<pre style="color: red;">Mermaid error: ${err.message}</pre>`;
+        });
+      } catch (err) {
+        container.innerHTML = `<pre style="color: red;">Mermaid error: ${err.message}</pre>`;
+      }
     }
-  };
+
+    pre.style.display = 'none';
+    pre.parentElement.insertBefore(wrapper, pre.nextSibling);
+  });
+
+  handleCheckboxToggle();
+}, [value, preview, handleCheckboxToggle]);
+
 
   return (
-    <div data-color-mode="light" className="max-h-screen overflow-y-hidden flex flex-col">
-      <div className="flex items-center space-x-1 p-1 bg-[var(--color-notebar)] border-b border-gray-300 w-full" style={{ minHeight: '36px', height: '36px' }}>
-        {/* Group 1: Heading, Bold, Italic, Strikethrough */}
-        {[0,1,2,3].map(idx => {
-          const btn = TOOLBAR_ACTIONS[idx];
-          return (
-            <button
-              key={btn.title}
-              title={btn.title}
-              className="px-1 py-1 rounded hover:bg-gray-200 text-sm font-bold flex items-center justify-center"
-              onClick={() => handleToolbarClick(btn.action)}
-              type="button"
-            >
-              {btn.icon}
-            </button>
-          );
-        })}
-        <span className="mx-1 text-gray-300 select-none">|</span>
-        {/* Group 2: Unordered List, Ordered List, Task List, Quote */}
-        {[6,7,8,9].map(idx => {
-          const btn = TOOLBAR_ACTIONS[idx];
-          return (
-            <button
-              key={btn.title}
-              title={btn.title}
-              className="px-1 py-1 rounded hover:bg-gray-200 text-sm font-bold flex items-center justify-center"
-              onClick={() => handleToolbarClick(btn.action)}
-              type="button"
-            >
-              {btn.icon}
-            </button>
-          );
-        })}
-        <span className="mx-1 text-gray-300 select-none">|</span>
-        {/* Group 3: Code, Horizontal Line, Link, Image */}
-        {[4,10,5,11].map(idx => {
-          const btn = TOOLBAR_ACTIONS[idx];
-          return (
-            <button
-              key={btn.title}
-              title={btn.title}
-              className="px-1 py-1 rounded hover:bg-gray-200 text-sm font-bold flex items-center justify-center"
-              onClick={() => handleToolbarClick(btn.action)}
-              type="button"
-            >
-              {btn.icon}
-            </button>
-          );
-        })}
-      </div>
-      <div className="flex-1 h-screen flex overflow-hidden">
-        <div
-          ref={editorRef}
-          className={`${previewMode === 'preview' ? 'hidden' : previewMode === 'live' ? 'w-1/2' : 'flex-1'} max-h-screen overflow-y-scroll`}
-        >
-          <CodeMirror {...editorOptions} />
-        </div>
-
-        {previewMode !== 'edit' && (
-          <div
-            ref={previewRef}
-            className={`${previewMode === 'live' ? 'w-1/2' : 'flex-1'} max-h-screen overflow-y-scroll cm-preview-container`}
-          >
-            <div
-              className="markdown-preview p-4 min-h-full"
-              dangerouslySetInnerHTML={{ __html: markdownToHtml(markdownValue) }}
-            />
-          </div>
-        )}
+    <div data-color-mode="light" className="h-screen flex flex-col">
+      <div className="h-screen ">
+        <MDEditor
+          value={value}
+          onChange={(newValue) => {
+            setValue(newValue);
+            if (onSaveNote && selectedNote) {
+              onSaveNote(selectedNote.folderName, newValue, selectedNote.name);
+            }
+          }}
+          preview={preview}
+          commandsFilter={(cmd) => {
+            if (/(edit|live|preview)/.test(cmd.name)) {
+              return false;
+            }
+            return cmd;
+          }}
+          previewOptions={{
+            remarkPlugins: [remarkMath, remarkGfm],
+            rehypePlugins: [[rehypeKatex, {
+              strict: false,
+              output: 'html'
+            }]],
+          }}
+        />
       </div>
 
       <div className="fixed bottom-5 right-5 flex flex-col items-center justify-center rounded-md bg-gray-100 border border-gray-300 cursor-pointer z-10 p-0.5">
-        <button
-          onClick={() => setPreviewMode(prev => prev === 'edit' ? 'preview' : 'edit')}
-          className="hover:bg-gray-200 m-2"
-          title={previewMode === 'edit' ? "Preview Mode" : "Edit Mode"}
-        >
-          {previewMode === 'edit' ? <Eye className="text-gray-700" size={19} /> : <Pencil className="text-gray-700" size={19} />}
+        <button onClick={() => changePreview('preview')} className="hover:bg-gray-200 m-2">
+          {preview === 'edit' ? <Eye className="text-gray-700" size={19} /> : <Pencil className="text-gray-700" size={19} />}
         </button>
-        <button
-          onClick={() => setPreviewMode(prev => prev === 'live' ? 'edit' : 'live')}
-          className="hover:bg-gray-200 m-1"
-          title="Split View"
-        >
+        <button onClick={() => changePreview('live')} className="hover:bg-gray-200 m-1">
           <SquareSplitHorizontal size={19} className="text-gray-700" />
         </button>
       </div>
     </div>
   );
 }
-export default MarkDownEditor;

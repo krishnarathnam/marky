@@ -1,0 +1,661 @@
+
+import React, { useEffect, useState, useRef, useCallback } from 'react'
+import CodeMirror from '@uiw/react-codemirror';
+import { oneDark } from '@codemirror/theme-one-dark';
+import { EditorView, gutter, gutters, lineNumbers } from '@codemirror/view';
+import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { languages } from '@codemirror/language-data';
+import remarkParse from 'remark-parse';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import remarkRehype from 'remark-rehype';
+import rehypeRaw from 'rehype-raw';
+import rehypeKatex from 'rehype-katex';
+import rehypeStringify from 'rehype-stringify';
+import rehypeHighlight from 'rehype-highlight';
+import { unified } from 'unified';
+import mermaid from 'mermaid';
+import { Eye, Pencil, SquareSplitHorizontal, Bold, Italic, Heading, Code, Link, List, ListOrdered, ListTodo, Quote, Image as ImageIcon, Strikethrough, Minus } from 'lucide-react';
+
+import 'katex/dist/katex.min.css';
+import 'highlight.js/styles/github.css';
+
+const initialMarkdown = `# Advanced Markdown Editor
+
+This is an enhanced Markdown editor with support for code highlighting, math formulas, and diagrams.
+
+## Code Highlighting
+
+\`\`\`javascript
+function greeting() {
+  console.log("Hello, world!");
+  return "Hello!";
+}
+\`\`\`
+
+## Math with KaTeX
+
+Inline math: $E = mc^2$
+
+Display math:
+
+$$
+\\frac{1}{\\sqrt{2\\pi\\sigma^2}} e^{-\\frac{(x-\\mu)^2}{2\\sigma^2}}
+$$
+
+## Mermaid Diagrams
+
+\`\`\`mermaid
+graph TD;
+  A[Start] --> B{Is it working?};
+  B -- Yes --> C[Great!];
+  B -- No --> D[Debug];
+  D --> B;
+\`\`\`
+
+## Task List
+
+- [ ] Implement code highlighting
+- [ ] Add KaTeX support
+- [ ] Add Mermaid diagram support
+- [ ] Make it take full height of the app
+`;
+
+const TOOLBAR_ACTIONS = [
+  {
+    icon: <Bold size={16} />, title: 'Bold',
+    action: (view) => {
+      const { from, to } = view.state.selection.main;
+      const selected = view.state.sliceDoc(from, to);
+      const replacement = `**${selected || 'bold text'}**`;
+      view.dispatch({ changes: { from, to, insert: replacement } });
+      view.focus();
+    },
+  },
+  {
+    icon: <Italic size={16} />, title: 'Italic',
+    action: (view) => {
+      const { from, to } = view.state.selection.main;
+      const selected = view.state.sliceDoc(from, to);
+      const replacement = `*${selected || 'italic text'}*`;
+      view.dispatch({ changes: { from, to, insert: replacement } });
+      view.focus();
+    },
+  },
+  {
+    icon: <Strikethrough size={16} />, title: 'Strikethrough',
+    action: (view) => {
+      const { from, to } = view.state.selection.main;
+      const selected = view.state.sliceDoc(from, to);
+      const replacement = `~~${selected || 'strikethrough'}~~`;
+      view.dispatch({ changes: { from, to, insert: replacement } });
+      view.focus();
+    },
+  },
+  {
+    icon: <Heading size={16} />, title: 'Heading',
+    action: (view) => {
+      const { from, to } = view.state.selection.main;
+      const selected = view.state.sliceDoc(from, to);
+      const replacement = `# ${selected || 'Heading'}`;
+      view.dispatch({ changes: { from, to, insert: replacement } });
+      view.focus();
+    },
+  },
+  {
+    icon: <Code size={16} />, title: 'Code',
+    action: (view) => {
+      const { from, to } = view.state.selection.main;
+      const selected = view.state.sliceDoc(from, to);
+      const replacement = `\`${selected || 'code'}\``;
+      view.dispatch({ changes: { from, to, insert: replacement } });
+      view.focus();
+    },
+  },
+  {
+    icon: <Link size={16} />, title: 'Link',
+    action: (view) => {
+      const { from, to } = view.state.selection.main;
+      const selected = view.state.sliceDoc(from, to);
+      const replacement = `[${selected || 'link text'}](url)`;
+      view.dispatch({ changes: { from, to, insert: replacement } });
+      view.focus();
+    },
+  },
+  {
+    icon: <List size={16} />, title: 'Unordered List',
+    action: (view) => {
+      const { from, to } = view.state.selection.main;
+      const selected = view.state.sliceDoc(from, to) || 'List item';
+      const lines = selected.split('\n').map(line => line ? `- ${line}` : '- ').join('\n');
+      view.dispatch({ changes: { from, to, insert: lines } });
+      view.focus();
+    },
+  },
+  {
+    icon: <ListOrdered size={16} />, title: 'Ordered List',
+    action: (view) => {
+      const { from, to } = view.state.selection.main;
+      const selected = view.state.sliceDoc(from, to) || 'List item';
+      const lines = selected.split('\n').map((line, i) => line ? `${i + 1}. ${line}` : `${i + 1}. `).join('\n');
+      view.dispatch({ changes: { from, to, insert: lines } });
+      view.focus();
+    },
+  },
+  {
+    icon: <ListTodo size={16} />, title: 'Task List',
+    action: (view) => {
+      const { from, to } = view.state.selection.main;
+      const selected = view.state.sliceDoc(from, to) || 'Task item';
+      const lines = selected.split('\n').map(line => line ? `- [ ] ${line}` : '- [ ] ').join('\n');
+      view.dispatch({ changes: { from, to, insert: lines } });
+      view.focus();
+    },
+  },
+  {
+    icon: <Quote size={16} />, title: 'Quote',
+    action: (view) => {
+      const { from, to } = view.state.selection.main;
+      const selected = view.state.sliceDoc(from, to) || 'Quote';
+      const lines = selected.split('\n').map(line => `> ${line}`).join('\n');
+      view.dispatch({ changes: { from, to, insert: lines } });
+      view.focus();
+    },
+  },
+  {
+    icon: <Minus size={16} />, title: 'Horizontal Line',
+    action: (view) => {
+      const { from, to } = view.state.selection.main;
+      view.dispatch({ changes: { from, to, insert: '\n---\n' } });
+      view.focus();
+    },
+  },
+  {
+    icon: <ImageIcon size={16} />, title: 'Image',
+    action: (view) => {
+      const { from, to } = view.state.selection.main;
+      const selected = view.state.sliceDoc(from, to);
+      const replacement = `![${selected || 'alt text'}](url)`;
+      view.dispatch({ changes: { from, to, insert: replacement } });
+      view.focus();
+    },
+  },
+];
+
+const markdownToHtml = (markdownText) => {
+  try {
+    const result = unified()
+      .use(remarkParse)
+      .use(remarkGfm, {
+        tasklistItem: true,
+        tasklistItemCheckbox: true,
+        stringLength: (str) => str.length
+      })
+      .use(remarkMath)
+      .use(remarkRehype, {
+        allowDangerousHtml: true,
+        handlers: {
+          taskList: (h, node) => {
+            const list = h(node, 'ul', { className: 'task-list' });
+            list.children = node.children.map((item) => {
+              const checkbox = h(
+                'input',
+                {
+                  type: 'checkbox',
+                  checked: item.checked,
+                  disabled: true,
+                  className: 'task-list-item-checkbox'
+                }
+              );
+              const text = h('span', { className: 'task-list-item-text' }, item.children);
+              return h('li', { className: 'task-list-item' }, [checkbox, text]);
+            });
+            return list;
+          }
+        }
+      })
+      .use(rehypeRaw)
+      .use(rehypeKatex, { strict: false, output: 'html' })
+      .use(rehypeHighlight)
+      .use(rehypeStringify, { allowDangerousHtml: true })
+      .processSync(markdownText);
+    
+    return String(result);
+  } catch (error) {
+    console.error("Error in markdownToHtml:", error);
+    return `<div style="color: red;">Error processing Markdown: ${error instanceof Error ? error.message : 'Unknown error'}</div>`;
+  }
+};
+
+const DEBOUNCE_DELAY = 2000; // 2 second delay for rendering mermaid diagrams
+
+const debounce = (func, delay) => {
+  let timeoutId;
+  return (...args) => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+    timeoutId = setTimeout(() => {
+      func(...args);
+    }, delay);
+  };
+};
+
+const MarkDownEditor = ({ onSaveNote, selectedNote }) => {
+  const [markdownValue, setMarkdownValue] = useState(selectedNote ? selectedNote.content : initialMarkdown);
+  const [previewMode, setPreviewMode] = useState('edit');
+  const [editor, setEditor] = useState(null);
+  const previewRef = useRef(null);
+  const editorRef = useRef(null);
+  const renderedDiagramsRef = useRef(new Map());
+  const isRenderingRef = useRef(false);
+  const renderTimeoutRef = useRef(null);
+  const lastMermaidContentRef = useRef(new Map());
+  const pendingRenderRef = useRef(false);
+
+  const handleChange = useCallback((value, viewUpdate) => {
+    setMarkdownValue(value);
+    if (onSaveNote && selectedNote) {
+      onSaveNote(selectedNote.folderName, value, selectedNote.name);
+    }
+  }, [onSaveNote, selectedNote]);
+
+  useEffect(() => {
+    if (selectedNote) {
+      setMarkdownValue(selectedNote.content);
+    }
+  }, [selectedNote?.name, selectedNote?.folderName, selectedNote?.content]);
+
+  const debouncedRenderMermaid = useCallback(
+    debounce((container) => {
+      if (renderTimeoutRef.current) {
+        clearTimeout(renderTimeoutRef.current);
+      }
+      
+      renderTimeoutRef.current = setTimeout(() => {
+        renderMermaidDiagrams(container);
+        renderTimeoutRef.current = null;
+      }, 100); 
+    }, DEBOUNCE_DELAY),
+    []
+  );
+
+  const renderMermaidDiagrams = async (container) => {
+    if (!container || isRenderingRef.current) return;
+    isRenderingRef.current = true;
+    pendingRenderRef.current = false;
+
+    try {
+      mermaid.initialize({ 
+        startOnLoad: false, 
+        theme: 'default',
+        securityLevel: 'loose',
+        fontFamily: 'monospace'
+      });
+
+      const mermaidBlocks = container.querySelectorAll('pre > code.language-mermaid');
+      let diagramsChanged = false;
+      
+      for (const codeBlock of mermaidBlocks) {
+        const pre = codeBlock.parentElement;
+        const code = codeBlock.textContent;
+        
+        if (lastMermaidContentRef.current.get(pre) === code) {
+          continue;
+        }
+        
+        lastMermaidContentRef.current.set(pre, code);
+        diagramsChanged = true;
+
+        try {
+          const existingWrapper = pre.nextSibling;
+          if (existingWrapper?.classList?.contains('mermaid-wrapper')) {
+            existingWrapper.remove();
+          }
+
+          const tempDiv = document.createElement('div');
+          tempDiv.className = 'mermaid';
+          tempDiv.textContent = code;
+          document.body.appendChild(tempDiv);
+
+          await mermaid.init(undefined, tempDiv);
+          
+          const svg = tempDiv.querySelector('svg');
+          if (svg) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'mermaid-wrapper';
+            wrapper.style.width = '100%';
+            wrapper.style.margin = '0 auto';
+            wrapper.style.maxWidth = '300px';
+            
+            // Create an image from the SVG
+            const img = document.createElement('img');
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(svgBlob);
+            img.src = url;
+            img.style.width = '100%';
+            img.style.height = 'auto';
+            img.style.minWidth = '100px';
+            img.style.maxWidth = '100%';
+            img.style.display = 'block';
+            
+            wrapper.appendChild(img);
+            
+            // Hide the code block in preview mode
+            if (previewMode !== 'edit') {
+              pre.style.display = 'none';  
+            }
+            
+            pre.parentElement.insertBefore(wrapper, pre.nextSibling);
+            
+            // Store the rendered diagram
+            renderedDiagramsRef.current.set(code, wrapper);
+          }
+          
+          // Clean up temporary div
+          document.body.removeChild(tempDiv);
+        } catch (err) {
+          console.error('Mermaid error:', err);
+          const errorDiv = document.createElement('div');
+          errorDiv.style.color = 'red';
+          errorDiv.textContent = `Mermaid Error: ${err.message || 'Failed to render diagram'}`;
+          pre.parentElement.insertBefore(errorDiv, pre.nextSibling);
+        }
+      }
+
+      // Only trigger a state update if diagrams actually changed
+      if (diagramsChanged) {
+        // This empty state update helps React reconcile DOM changes
+        setMarkdownValue(prev => prev);
+      }
+    } finally {
+      isRenderingRef.current = false;
+      
+      // If another render was requested while we were rendering, schedule another one
+      if (pendingRenderRef.current && container) {
+        pendingRenderRef.current = false;
+        setTimeout(() => debouncedRenderMermaid(container), 100);
+      }
+    }
+  };
+
+  // Handle markdown changes with improved debouncing for mermaid rendering
+  useEffect(() => {
+    if (previewMode === 'edit' || !previewRef.current) return;
+    
+    // If already rendering, mark as pending and return
+    if (isRenderingRef.current) {
+      pendingRenderRef.current = true;
+      return;
+    }
+    
+    // Debounce the rendering
+    debouncedRenderMermaid(previewRef.current);
+  }, [markdownValue, previewMode, debouncedRenderMermaid]);
+
+  // Force render diagrams when switching to preview or live mode
+  useEffect(() => {
+    if (previewMode !== 'edit' && previewRef.current) {
+      // Clear mermaid content cache when switching modes to force re-render
+      lastMermaidContentRef.current.clear();
+      
+      // NEW: When switching modes, properly hide/show code blocks
+      setTimeout(() => {
+        const container = previewRef.current;
+        if (!container) return;
+        
+        // Hide all mermaid code blocks in preview and live modes
+        const mermaidBlocks = container.querySelectorAll('pre > code.language-mermaid');
+        for (const codeBlock of mermaidBlocks) {
+          const pre = codeBlock.parentElement;
+          pre.style.display = 'none';
+          
+          // Show the wrapper if it exists
+          const wrapper = pre.nextSibling;
+          if (wrapper?.classList?.contains('mermaid-wrapper')) {
+            wrapper.style.display = 'block';
+          }
+        }
+        
+        renderMermaidDiagrams(container);
+      }, 50);
+    } else if (previewMode === 'edit') {
+      // NEW: When switching back to edit mode, make sure code blocks are visible in editor
+      const editorContainer = document.querySelector('.cm-content');
+      if (editorContainer) {
+        const codeBlocks = editorContainer.querySelectorAll('pre');
+        for (const block of codeBlocks) {
+          block.style.display = 'block';
+        }
+      }
+    }
+  }, [previewMode]);
+
+  // Clean up rendered diagrams when component unmounts
+  useEffect(() => {
+    return () => {
+      renderedDiagramsRef.current.clear();
+      lastMermaidContentRef.current.clear();
+      if (renderTimeoutRef.current) {
+        clearTimeout(renderTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' });
+  }, []);
+
+  // Add this effect to handle initial scroll position
+  useEffect(() => {
+    if (previewRef.current && previewMode === 'live') {
+      requestAnimationFrame(() => {
+        const previewContainer = previewRef.current;
+        if (previewContainer) {
+          previewContainer.scrollTop = previewContainer.scrollHeight;
+        }
+      });
+    }
+  }, [previewMode]);
+
+  const editorOptions = {
+    value: markdownValue,
+    onChange: handleChange,
+    height: '100%',
+    basicSetup: {
+      lineNumbers: false,
+      highlightActiveLineGutter: false,
+      highlightSelectionMatches: false,
+      closeBrackets: true,
+      autocompletion: false,
+      rectangularSelection: true,
+      crosshairCursor: true,
+      highlightActiveLine: true,
+      highlightSpecialChars: true,
+      gutters: false,
+      foldGutter: false,
+      history: true,
+      drawSelection: true,
+      dropCursor: true,
+      allowMultipleSelections: true,
+      indentOnInput: true,
+      bracketMatching: true,
+      lineWrapping: true,
+    },
+    extensions: [
+      EditorView.lineWrapping,
+      markdown({ base: markdownLanguage, codeLanguages: languages }),
+      EditorView.theme({
+        '.cm-content': {
+          padding: '10px 0',
+          height: '100%',
+          overflow: 'auto'
+        },
+        '.cm-line': {
+          padding: '0 10px',
+        }
+      })
+    ],
+    onCreateEditor: (view) => {
+      setEditor(view);
+    },
+  };
+
+  const handleToolbarClick = (action) => {
+    if (editor) {
+      action(editor);
+    }
+  };
+
+  // Update styles for task lists
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .task-list {
+        list-style-type: none !important;
+        padding-left: 0;
+      }
+      .task-list-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin: 4px 0;
+        padding: 4px 0;
+      }
+      .task-list-item-checkbox {
+        margin: 0;
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+      }
+      .task-list-item-text {
+        flex-grow: 1;
+      }
+      /* Override default list styles for task lists */
+      .markdown-preview .task-list {
+        list-style: none !important;
+        padding-left: 0 !important;
+      }
+      .markdown-preview .task-list-item {
+        list-style: none !important;
+        padding-left: 0 !important;
+      }
+      /* Styles for mermaid diagrams */
+      .markdown-preview pre:has(code.language-mermaid) {
+        display: none;
+      }
+      .mermaid-wrapper {
+        margin: 1rem 0;
+        padding: 1rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .mermaid-wrapper img {
+        display: block;
+        margin: 0 auto;
+        max-width: 100%;
+        height: auto;
+      }
+      .markdown-preview {
+        padding: 1rem;
+        min-height: 100%;
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+
+  return (
+    <div className="max-h-screen flex flex-col">
+      <div className="flex items-center space-x-1 p-1 bg-[var(--color-notebar)] border-b border-gray-300 w-full" style={{ minHeight: '36px', height: '36px' }}>
+        {[0,1,2,3].map(idx => {
+          const btn = TOOLBAR_ACTIONS[idx];
+          return (
+            <button
+              key={btn.title}
+              title={btn.title}
+              className="px-1 py-1 rounded hover:bg-gray-200 text-sm font-bold flex items-center justify-center"
+              onClick={() => handleToolbarClick(btn.action)}
+              type="button"
+            >
+              {btn.icon}
+            </button>
+          );
+        })}
+        <span className="mx-1 text-gray-300 select-none">|</span>
+        {[6,7,8,9].map(idx => {
+          const btn = TOOLBAR_ACTIONS[idx];
+          return (
+            <button
+              key={btn.title}
+              title={btn.title}
+              className="px-1 py-1 rounded hover:bg-gray-200 text-sm font-bold flex items-center justify-center"
+              onClick={() => handleToolbarClick(btn.action)}
+              type="button"
+            >
+              {btn.icon}
+            </button>
+          );
+        })}
+        <span className="mx-1 text-gray-300 select-none">|</span>
+        {/* Group 3: Code, Horizontal Line, Link, Image */}
+        {[4,10,5,11].map(idx => {
+          const btn = TOOLBAR_ACTIONS[idx];
+          return (
+            <button
+              key={btn.title}
+              title={btn.title}
+              className="px-1 py-1 rounded hover:bg-gray-200 text-sm font-bold flex items-center justify-center"
+              onClick={() => handleToolbarClick(btn.action)}
+              type="button"
+            >
+              {btn.icon}
+            </button>
+          );
+        })}
+      </div>
+      <div className="flex-1 flex overflow-hidden">
+        <div
+          ref={editorRef}
+          className={`${previewMode === 'preview' ? 'hidden' : previewMode === 'live' ? 'w-1/2' : 'flex-1'} h-full overflow-hidden`}
+        >
+          <CodeMirror {...editorOptions} />
+        </div>
+
+        {previewMode !== 'edit' && (
+          <div
+            ref={previewRef}
+            className={`${previewMode === 'live' ? 'w-1/2' : 'flex-1'} h-full overflow-y-auto cm-preview-container`}
+          >
+            <div
+              className="markdown-preview p-4 min-h-full"
+              dangerouslySetInnerHTML={{ __html: markdownToHtml(markdownValue) }}
+            />
+          </div>
+        )}
+      </div>
+      <div className="fixed bottom-5 right-5 flex flex-col items-center justify-center rounded-md bg-gray-100 border border-gray-300 cursor-pointer z-10 p-0.5">
+        <button
+          onClick={() => setPreviewMode(prev => prev === 'edit' ? 'preview' : 'edit')}
+          className="hover:bg-gray-200 m-2"
+          title={previewMode === 'edit' ? "Preview Mode" : "Edit Mode"}
+        >
+          {previewMode === 'edit' ? <Eye className="text-gray-700" size={19} /> : <Pencil className="text-gray-700" size={19} />}
+        </button>
+        <button
+          onClick={() => setPreviewMode(prev => prev === 'live' ? 'edit' : 'live')}
+          className="hover:bg-gray-200 m-1"
+          title="Split View"
+        >
+          <SquareSplitHorizontal size={19} className="text-gray-700" />
+        </button>
+      </div>
+    </div>
+  );
+}
+export default MarkDownEditor;
