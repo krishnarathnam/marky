@@ -24,7 +24,7 @@ export default function Folders({ folderNoteCounts, onDeleteFolder, openModal, f
       {showFolders && (
         <>
 
-          <div className="ml-8 space-y-2 max-h-[calc(100vh-500px)] overflow-y-auto">
+          <div className="ml-8 space-y-2  ">
             {folders.map((folder) => {
               const count = folderNoteCounts?.[folder] || 0;
               return (
