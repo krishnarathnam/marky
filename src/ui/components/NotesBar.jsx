@@ -106,7 +106,9 @@ export default function NotesBar({ onCreateNewNote, handleExportPDF, linkFolderN
           />
           <hr className="border-border" />
         </div>
-        <LayoutGroup>
+        
+          <div className="overflow-y-scroll flex-grow scrollbar-hidden">
+          <LayoutGroup>
           {creatingNote && (
             <CreateNoteModal setNewNoteName={setNewNoteName} handleNewNoteSubmit={handleNewNoteSubmit} />
           )}
@@ -141,7 +143,9 @@ export default function NotesBar({ onCreateNewNote, handleExportPDF, linkFolderN
               </motion.div>
             ))}
           </AnimatePresence>
-        </LayoutGroup >
+          </LayoutGroup >
+          </div>
+        
       </div >
     </>
   );

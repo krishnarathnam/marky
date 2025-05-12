@@ -17,7 +17,7 @@ export default function Editor({ onCreateNewNote, handleExportPDF, linkFolderNam
 
   return (
     <div className="h-screen overflow-hidden flex flex-col">
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex ">
         <AnimatePresence mode="wait">
           {showNotesBar && (
             <motion.div
