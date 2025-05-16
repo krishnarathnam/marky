@@ -1,5 +1,6 @@
 import { Ellipsis, X, Trash2, FileDown, Star, FolderPen } from 'lucide-react';
 import { useState } from 'react';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Notes({
   handleExportPDF,
@@ -16,6 +17,7 @@ export default function Notes({
   index
 }) {
   const [renameName, setRenameName] = useState('Default');
+  const { isDarkMode } = useTheme();
 
   function HandleRename() {
     const safeNewName = renameName.endsWith('.md') ? renameName : `${renameName}.md`;
@@ -36,7 +38,8 @@ export default function Notes({
 
   return (
     <div
-      className="relative p-2 flex flex-col w-full hover:bg-gray-200 transition border-border border-b-1"
+      className="relative p-2 flex flex-col w-full hover:bg-gray-200 transition border-b-1 border-border"
+      style={isDarkMode ? { borderBottom: '1px solid #232323' } : {}}
       onClick={() => onSelectedNote(note)}
     >
       <div>
@@ -49,10 +52,10 @@ export default function Notes({
             <Ellipsis size={17} />
           </button>
         </div>
-        <div className="text-base font-semibold text-note-primary">
+        <div className={`text-base font-semibold ${isDarkMode ? 'text-gray-100' : 'text-note-primary'}`}>
           {note.name.replace('.md', '')}
         </div>
-        <div className="text-sm text-note-secondary pt-1.5 truncate">
+        <div className={`text-sm pt-1.5 truncate ${isDarkMode ? 'text-gray-400' : 'text-note-secondary'}`}>
           {stripMarkdown(note.content).slice(0, 50)}
         </div>
       </div>

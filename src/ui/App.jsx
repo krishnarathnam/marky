@@ -5,6 +5,16 @@ import PromptFolder from "./components/PromptFolder";
 import Home from "./components/Home";
 import Editor from "./components/Editor";
 import { Routes, Route, HashRouter } from "react-router-dom";
+import { ThemeProvider, useTheme } from "./context/ThemeContext";
+
+function AppContent(props) {
+  const { isDarkMode } = useTheme();
+  return (
+    <div className="flex h-screen" style={isDarkMode ? { backgroundColor: '#111111' } : {}}>
+      {props.children}
+    </div>
+  );
+}
 
 function App() {
   const [modalOpen, setModalOpen] = useState(false);
@@ -333,136 +343,138 @@ function App() {
   }
 
   return (
-    <HashRouter>
-      <LayoutGroup>
-        <div className="flex h-screen">
-          {modalOpen && (
-            <PromptFolder
-              type={modalType}
-              setName={modalType === "folder" ? setFolderName : setNoteName}
-              closeModal={closeModal}
-              createItem={modalType === "folder" ? createNewFolder : createNewNote}
-            />
-          )}
+    <ThemeProvider>
+      <HashRouter>
+        <LayoutGroup>
+          <AppContent>
+            {modalOpen && (
+              <PromptFolder
+                type={modalType}
+                setName={modalType === "folder" ? setFolderName : setNoteName}
+                closeModal={closeModal}
+                createItem={modalType === "folder" ? createNewFolder : createNewNote}
+              />
+            )}
 
-          <div className="flex flex-row h-full w-full">
-            <AnimatePresence mode="wait">
-              {showSidebar && (
-                <motion.div
-                  key="sidebar"
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: "auto", opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="flex-shrink-0 overflow-hidden"
-                >
-                  <SideBar
-                    lastWorked={lastWorked}
-                    username={username}
-                    setLastWorked={setLastWorked}
-                    onDeleteFolder={onDeleteFolder}
-                    openModal={openModal}
-                    setFolders={setFolders}
-                    folders={folders}
-                    folderNoteCounts={folderNoteCounts}
+            <div className="flex flex-row h-full w-full">
+              <AnimatePresence mode="wait">
+                {showSidebar && (
+                  <motion.div
+                    key="sidebar"
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: "auto", opacity: 1 }}
+                    exit={{ width: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex-shrink-0 overflow-hidden"
+                  >
+                    <SideBar
+                      lastWorked={lastWorked}
+                      username={username}
+                      setLastWorked={setLastWorked}
+                      onDeleteFolder={onDeleteFolder}
+                      openModal={openModal}
+                      setFolders={setFolders}
+                      folders={folders}
+                      folderNoteCounts={folderNoteCounts}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <motion.main
+                layout
+                transition={{ duration: 0.3 }}
+                className="flex-1 overflow-y-auto"
+              >
+                <Routes>
+                  <Route path="/" element={<Home username={username} />} />
+                  <Route
+                    path="/category/important"
+                    element={
+                      <Editor
+                        handleExportPDF={handleExportPDF}
+                        onCreateNewNote={createNewNote}
+                        showNotesBar={showNotesBar}
+                        linkFolderName={linkFolderName}
+                        getAllNotes={getAllNotes}
+                        setAllNotes={setAllNotes}
+                        onRenameNote={renameNote}
+                        onDeleteNote={deleteNote}
+                        openModal={openModal}
+                        notes={importantNotes}
+                        onSaveNote={saveNote}
+                        onToggleImportant={toggleImportant}
+                        setLinkFolderName={setLinkFolderName}
+                      />
+                    }
                   />
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <motion.main
-              layout
-              transition={{ duration: 0.3 }}
-              className="flex-1 overflow-y-auto"
-            >
-              <Routes>
-                <Route path="/" element={<Home username={username} />} />
-                <Route
-                  path="/category/important"
-                  element={
-                    <Editor
-                      handleExportPDF={handleExportPDF}
-                      onCreateNewNote={createNewNote}
-                      showNotesBar={showNotesBar}
-                      linkFolderName={linkFolderName}
-                      getAllNotes={getAllNotes}
-                      setAllNotes={setAllNotes}
-                      onRenameNote={renameNote}
-                      onDeleteNote={deleteNote}
-                      openModal={openModal}
-                      notes={importantNotes}
-                      onSaveNote={saveNote}
-                      onToggleImportant={toggleImportant}
-                      setLinkFolderName={setLinkFolderName}
-                    />
-                  }
-                />
-                <Route
-                  path="/category/recent"
-                  element={
-                    <Editor
-                      handleExportPDF={handleExportPDF}
-                      onCreateNewNote={createNewNote}
-                      getAllNotes={getAllNotes}
-                      linkFolderName={linkFolderName}
-                      showNotesBar={showNotesBar}
-                      setAllNotes={setAllNotes}
-                      onRenameNote={renameNote}
-                      onDeleteNote={deleteNote}
-                      openModal={openModal}
-                      notes={recentNotes}
-                      onSaveNote={saveNote}
-                      onToggleImportant={toggleImportant}
-                      setLinkFolderName={setLinkFolderName}
-                    />
-                  }
-                />
-                <Route
-                  path="/category/all"
-                  element={
-                    <Editor
-                      handleExportPDF={handleExportPDF}
-                      onCreateNewNote={createNewNote}
-                      getAllNotes={getAllNotes}
-                      linkFolderName={linkFolderName}
-                      showNotesBar={showNotesBar}
-                      setAllNotes={setAllNotes}
-                      onRenameNote={renameNote}
-                      onDeleteNote={deleteNote}
-                      openModal={openModal}
-                      notes={allNotes}
-                      onSaveNote={saveNote}
-                      setLinkFolderName={setLinkFolderName}
-                      onToggleImportant={toggleImportant}
-                    />
-                  }
-                />
-                <Route
-                  path="/folder/:LinkFolderName"
-                  element={
-                    <Editor
-                      handleExportPDF={handleExportPDF}
-                      onCreateNewNote={createNewNote}
-                      getAllNotes={getAllNotes}
-                      linkFolderName={linkFolderName}
-                      onRenameNote={renameNote}
-                      onDeleteNote={deleteNote}
-                      showNotesBar={showNotesBar}
-                      openModal={openModal}
-                      onSaveNote={saveNote}
-                      notes={notes}
-                      setLinkFolderName={setLinkFolderName}
-                      currentFolerName={linkFolderName}
-                      onToggleImportant={toggleImportant}
-                    />
-                  }
-                />
-              </Routes>
-            </motion.main>
-          </div>
-        </div>
-      </LayoutGroup>
-    </HashRouter>
+                  <Route
+                    path="/category/recent"
+                    element={
+                      <Editor
+                        handleExportPDF={handleExportPDF}
+                        onCreateNewNote={createNewNote}
+                        getAllNotes={getAllNotes}
+                        linkFolderName={linkFolderName}
+                        showNotesBar={showNotesBar}
+                        setAllNotes={setAllNotes}
+                        onRenameNote={renameNote}
+                        onDeleteNote={deleteNote}
+                        openModal={openModal}
+                        notes={recentNotes}
+                        onSaveNote={saveNote}
+                        onToggleImportant={toggleImportant}
+                        setLinkFolderName={setLinkFolderName}
+                      />
+                    }
+                  />
+                  <Route
+                    path="/category/all"
+                    element={
+                      <Editor
+                        handleExportPDF={handleExportPDF}
+                        onCreateNewNote={createNewNote}
+                        getAllNotes={getAllNotes}
+                        linkFolderName={linkFolderName}
+                        showNotesBar={showNotesBar}
+                        setAllNotes={setAllNotes}
+                        onRenameNote={renameNote}
+                        onDeleteNote={deleteNote}
+                        openModal={openModal}
+                        notes={allNotes}
+                        onSaveNote={saveNote}
+                        setLinkFolderName={setLinkFolderName}
+                        onToggleImportant={toggleImportant}
+                      />
+                    }
+                  />
+                  <Route
+                    path="/folder/:LinkFolderName"
+                    element={
+                      <Editor
+                        handleExportPDF={handleExportPDF}
+                        onCreateNewNote={createNewNote}
+                        getAllNotes={getAllNotes}
+                        linkFolderName={linkFolderName}
+                        onRenameNote={renameNote}
+                        onDeleteNote={deleteNote}
+                        showNotesBar={showNotesBar}
+                        openModal={openModal}
+                        onSaveNote={saveNote}
+                        notes={notes}
+                        setLinkFolderName={setLinkFolderName}
+                        currentFolerName={linkFolderName}
+                        onToggleImportant={toggleImportant}
+                      />
+                    }
+                  />
+                </Routes>
+              </motion.main>
+            </div>
+          </AppContent>
+        </LayoutGroup>
+      </HashRouter>
+    </ThemeProvider>
   );
 }
 export default App;

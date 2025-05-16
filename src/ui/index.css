@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 @import 'katex/dist/katex.min.css';
 
 *:focus {
@@ -24,7 +24,7 @@ body,
 /* Add these new styles */
 .w-md-editor {
   overflow: hidden !important;
-  height: 95% !important;
+  height: 96% !important;
 }
 
 
@@ -144,35 +144,12 @@ body,
   max-width: 90%;
 }
 
-::-webkit-scrollbar {
-  width: 9px;
-}
-
-::-webkit-scrollbar-track {
-  background: #fafafa;
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: #1E1E1E;
-  border-radius: 0px;
-  border: 2px solid #fafafa;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: #1E1E1E;
-}
-
 .scrollbar-visible::-webkit-scrollbar {
   width: 10px;
 }
 
 .scrollbar-hidden::-webkit-scrollbar {
   width: 0;
-}
-
-.scrollbar-visible::-webkit-scrollbar-thumb {
-  background-color: #fafafa;
-  border-radius: 3px;
 }
 
 /* Hide vertical scrollbar in editor preview and textarea */
@@ -190,4 +167,77 @@ body,
     --color-note-secondary: #505050;
 
     --color-note-teriary: #a1a1aa;
+}
+
+[data-color-mode="dark"] .wmde-markdown,
+[data-color-mode="dark"] .wmde-markdown-color {
+  background-color: #0D0D0D !important;
+  color: #ffffff !important;
+}
+
+[data-color-mode="dark"] .w-md-editor,
+[data-color-mode="dark"] .w-md-editor-toolbar,
+[data-color-mode="dark"] .w-md-editor-content,
+[data-color-mode="dark"] .w-md-editor-text,
+[data-color-mode="dark"] .w-md-editor-preview,
+[data-color-mode="dark"] .w-md-editor-preview-content {
+  background-color: #0D0D0D !important;
+  color: #ffffff !important;
+  border-color: #232323 !important;
+}
+
+[data-color-mode="dark"] .w-md-editor-toolbar button,
+[data-color-mode="dark"] .w-md-editor-toolbar svg {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+
+[data-color-mode="dark"] .katex-display {
+  background: #0D0D0D !important;   /* or #0A0A0A for full black */
+  color: #ffffff !important;
+  border-radius: 6px;
+  padding: 16px 8px;
+}
+
+[data-color-mode="dark"] .w-md-editor-preview code{
+  color: #f8f8f2 !important;
+  background-color: #151515 !important;
+}
+
+[data-color-mode="dark"] .w-md-editor-text-input,
+[data-color-mode="dark"] .w-md-editor-text-input textarea,
+[data-color-mode="dark"] .w-md-editor-text-input input {
+  color: #ffffff !important;
+
+}
+
+
+[data-color-mode="dark"] .katex {
+  color: #ffffff !important;
+}
+
+[data-color-mode="dark"] ::-webkit-scrollbar {
+  width: 7px;
+  background: #0D0D0D !important; /* Black track */
+}
+
+[data-color-mode="dark"] ::-webkit-scrollbar-thumb {
+  background: #353535 !important; /* Gray thumb */
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888 !important; /* Gray thumb */
+  background-color: #888 !important;
+}
+
+[data-color-mode="dark"] .wmde-markdown table,
+[data-color-mode="dark"] .wmde-markdown th,
+[data-color-mode="dark"] .wmde-markdown td {
+  background-color: #181A1B !important; /* or any dark shade you prefer */
+  color: #fff !important;
+  border-color: #232323 !important;
 }

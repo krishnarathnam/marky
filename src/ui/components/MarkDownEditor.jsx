@@ -7,6 +7,7 @@ import { Eye, SquareSplitHorizontal, Pencil } from 'lucide-react';
 import "@uiw/react-md-editor/markdown-editor.css";
 import "@uiw/react-markdown-preview/markdown.css";
 import 'katex/dist/katex.min.css';
+import { useTheme } from '../context/ThemeContext';
 
 const initialMarkdown = `# Markdown Example
 
@@ -30,25 +31,7 @@ $$
 export default function MarkDownEditor({ onSaveNote, selectedNote }) {
   const [value, setValue] = useState(selectedNote ? selectedNote.content : initialMarkdown);
   const [preview, setPreview] = useState('edit');
-  const [debouncedValue, setDebouncedValue] = useState(value);
-  const debounceTimeoutRef = useRef(null);
-
-  // Debounce value changes
-  useEffect(() => {
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current);
-    }
-
-    debounceTimeoutRef.current = setTimeout(() => {
-      setDebouncedValue(value);
-    }, 500); // 500ms debounce
-
-    return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current);
-      }
-    };
-  }, [value]);
+  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     if (selectedNote) {
@@ -68,10 +51,10 @@ export default function MarkDownEditor({ onSaveNote, selectedNote }) {
   }, [onSaveNote, selectedNote]);
 
   return (
-    <div data-color-mode="light" className="h-screen flex flex-col">
+    <div  data-color-mode={isDarkMode ? 'dark' : 'light'} className="h-screen flex flex-col" style={isDarkMode ? { background: '#0A0A0A', color: '#fff' } : {}}>
       <div className="h-screen">
         <MDEditor
-          value={preview === 'edit' ? value : debouncedValue}
+          value={value}
           onChange={handleValueChange}
           preview={preview}
           commandsFilter={(cmd) => {
@@ -90,12 +73,14 @@ export default function MarkDownEditor({ onSaveNote, selectedNote }) {
         />
       </div>
 
-      <div className="fixed bottom-5 right-5 flex flex-col items-center justify-center rounded-md bg-gray-100 border border-gray-300 cursor-pointer z-10 p-0.5">
-        <button onClick={() => changePreview('preview')} className="hover:bg-gray-200 m-2">
-          {preview === 'edit' ? <Eye className="text-gray-700" size={19} /> : <Pencil className="text-gray-700" size={19} />}
+      <div className="fixed bottom-5 right-5 flex flex-col items-center justify-center rounded-md bg-gray-100 border border-gray-300 cursor-pointer z-10 p-0.5"
+      style={isDarkMode ? { backgroundColor: '#111111', borderColor: '#232323' } : {}}
+      >
+        <button onClick={() => changePreview('preview')} className="m-2">
+          {preview === 'edit' ? <Eye className={isDarkMode ? "text-white" : "text-gray-700"} size={19} /> : <Pencil className={isDarkMode ? "text-white" : "text-gray-700"} size={19} />}
         </button>
-        <button onClick={() => changePreview('live')} className="hover:bg-gray-200 m-1">
-          <SquareSplitHorizontal size={19} className="text-gray-700" />
+        <button onClick={() => changePreview('live')} className="m-1">
+          <SquareSplitHorizontal size={19} className={isDarkMode ? "text-white" : "text-gray-700"} />
         </button>
       </div>
     </div>

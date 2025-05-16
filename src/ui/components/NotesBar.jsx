@@ -3,6 +3,7 @@ import { AnimatePresence, LayoutGroup, motion } from 'framer-motion';
 import SearchBar from "./SearchBar";
 import CreateNoteModal from "./CreateNoteModal";
 import Notes from "./Notes";
+import { useTheme } from '../context/ThemeContext';
 
 export default function NotesBar({ onCreateNewNote, handleExportPDF, linkFolderName, onToggleImportant, onRenameNote, onDeleteNote, notes, onSelectedNote }) {
   const [openToolbarIndex, setOpenToolbarIndex] = useState(null);
@@ -12,6 +13,7 @@ export default function NotesBar({ onCreateNewNote, handleExportPDF, linkFolderN
   const [search, setSearch] = useState('');
   const [creatingNote, setCreatingNote] = useState(false);
   const [newNoteName, setNewNoteName] = useState('');
+  const { isDarkMode } = useTheme();
 
   const notesToRender = isSorted ? sortedNotes : notes;
   const filteredNotes = notesToRender.filter(note =>
@@ -73,7 +75,10 @@ export default function NotesBar({ onCreateNewNote, handleExportPDF, linkFolderN
 
   if (!notes || notes.length === 0) {
     return (
-      <div className="border-border border-l-1 border-r-1 w-65 flex flex-col ">
+      <div
+        className="border-border border-l-1 border-r-1 w-65 flex flex-col"
+        style={isDarkMode ? { backgroundColor: '#111111', borderColor: '#232323' } : {}}
+      >
         <SearchBar
           search={search}
           onSearch={setSearch}
@@ -82,7 +87,7 @@ export default function NotesBar({ onCreateNewNote, handleExportPDF, linkFolderN
           openModal={isCreatingNewNote}
         />
 
-        <hr className="border-border" />
+        <hr className="border-border" style={isDarkMode ? { borderColor: '#232323' } : {}} />
         {creatingNote && (
           <CreateNoteModal setNewNoteName={setNewNoteName} handleNewNoteSubmit={handleNewNoteSubmit} />
         )}
@@ -95,7 +100,10 @@ export default function NotesBar({ onCreateNewNote, handleExportPDF, linkFolderN
 
   return (
     <>
-      <div className="border-border w-65 bg-notebar border-l-1 border-r-1 w-65 flex flex-col h-screen">
+      <div
+        className="border-border w-65 bg-notebar border-l-1 border-r-1 w-65 flex flex-col h-screen"
+        style={isDarkMode ? { backgroundColor: '#111111', borderColor: '#232323' } : {}}
+      >
         <div className="shrink-0">
           <SearchBar
             search={search}
@@ -104,7 +112,7 @@ export default function NotesBar({ onCreateNewNote, handleExportPDF, linkFolderN
             onHandleSort={handleSort}
             openModal={isCreatingNewNote}
           />
-          <hr className="border-border" />
+          <hr className="border-border" style={isDarkMode ? { borderColor: '#232323' } : {}} />
         </div>
         
           <div className="overflow-y-scroll flex-grow scrollbar-hidden">
