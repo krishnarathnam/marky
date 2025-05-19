@@ -12,7 +12,7 @@ const SideBar = ({ folderNoteCounts, username, onDeleteFolder, setLastWorked, op
   }
 
   return (
-    <aside className={`min-h-screen w-50 ${isDarkMode ? '' : 'bg-dark-blue'} text-sidebar-text m-0`} style={isDarkMode ? { backgroundColor: '#151515' } : {}}>
+    <aside className={`min-h-screen w-50 ${isDarkMode ? '' : 'bg-dark-blue'} text-sidebar-text m-0`} style={isDarkMode ? { backgroundColor: '#181A1B' } : {}}>
       <div className="overflow-x-hidden text-ellipsis whitespace-nowrap max-w-full">
         <Header handleHomeOnClick={handleHomeOnClick} username={username} lastWorked={lastWorked} setLastWorked={setLastWorked} />
         <div className="flex flex-col h-full">

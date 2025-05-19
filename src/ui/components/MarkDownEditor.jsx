@@ -1,6 +1,6 @@
-import React, { useRef, useEffect, useState, useCallback } from 'react'
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import MDEditor from '@uiw/react-md-editor';
-import remarkGfm from 'remark-gfm'
+import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { Eye, SquareSplitHorizontal, Pencil } from 'lucide-react';
@@ -39,9 +39,9 @@ export default function MarkDownEditor({ onSaveNote, selectedNote }) {
     }
   }, [selectedNote?.name, selectedNote?.folderName]);
 
-  function changePreview(mode) {
-    setPreview(prev => (prev === 'edit' ? mode : 'edit'));
-  }
+  const changePreview = useCallback((mode) => {
+    setPreview((prev) => (prev === 'edit' ? mode : 'edit'));
+  }, []);
 
   const handleValueChange = useCallback((newValue) => {
     setValue(newValue);
@@ -51,12 +51,15 @@ export default function MarkDownEditor({ onSaveNote, selectedNote }) {
   }, [onSaveNote, selectedNote]);
 
   return (
-    <div  data-color-mode={isDarkMode ? 'dark' : 'light'} className="h-screen flex flex-col" style={isDarkMode ? { background: '#0A0A0A', color: '#fff' } : {}}>
-      <div className="h-screen">
+    <div data-color-mode={isDarkMode ? 'dark' : 'light'} className="h-screen flex flex-col" style={isDarkMode ? { background: '#0A0A0A', color: '#fff' } : {}}>
+      <div className="h-full" >
         <MDEditor
           value={value}
           onChange={handleValueChange}
           preview={preview}
+          visibleDragbar={false}
+          highlightEnable={true}
+          height={100}
           commandsFilter={(cmd) => {
             if (/(edit|live|preview)/.test(cmd.name)) {
               return false;
@@ -74,7 +77,7 @@ export default function MarkDownEditor({ onSaveNote, selectedNote }) {
       </div>
 
       <div className="fixed bottom-5 right-5 flex flex-col items-center justify-center rounded-md bg-gray-100 border border-gray-300 cursor-pointer z-10 p-0.5"
-      style={isDarkMode ? { backgroundColor: '#111111', borderColor: '#232323' } : {}}
+        style={isDarkMode ? { backgroundColor: '#111112', borderColor: '#232323' } : {}}
       >
         <button onClick={() => changePreview('preview')} className="m-2">
           {preview === 'edit' ? <Eye className={isDarkMode ? "text-white" : "text-gray-700"} size={19} /> : <Pencil className={isDarkMode ? "text-white" : "text-gray-700"} size={19} />}

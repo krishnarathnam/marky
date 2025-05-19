@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="120" fill="#F3F4F6"/>
+  <!-- Circular accent -->
+  <circle cx="256" cy="256" r="160" fill="#fff"/>
+  <!-- Pen nib -->
+  <g>
+    <polygon points="256,160 320,352 256,304 192,352" fill="#4F46E5"/>
+    <circle cx="256" cy="288" r="16" fill="#fff"/>
+  </g>
+</svg>

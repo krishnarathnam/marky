@@ -30,6 +30,7 @@ function createWindow() {
     autoHideMenuBar: true,
     titleBarStyle: 'hidden',
     frame: false,
+    icon: path.join(__dirname, '../../assets/icon.ico'),
     webPreferences: {
       preload: preloadPath,
       contextIsolation: true,

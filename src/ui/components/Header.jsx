@@ -36,18 +36,16 @@ export default function Header({ handleHomeOnClick, username, setLastWorked, las
 
   return (
     <>
-      <div className={`rounded-b-sm shadow-2xs flex flex-col mb-5 ${isDarkMode ? '' : 'bg-darker-blue'}`} style={isDarkMode ? { backgroundColor: '#181A1B' } : {}}>
-        <div className="flex justify-between items-center p-3 pb-5 mt-2">
-          <div className="overflow-hidden text-ellipsis whitespace-nowrap max-w-full">
-            <h3 onClick={handleHomeOnClick} className="font-bold text-m dark:text-white">
-              {username}
-            </h3>
-            <p className="text-xs dark:text-gray-300">Last worked at {formattedTime}</p>
-          </div>
-          <button onClick={() => setShowSettings(true)}>
-            <Settings size={18} className="cursor-pointer hover:text-gray-300 dark:text-white" />
-          </button>
+      <div className={`flex mb-5 justify-between items-center border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-300'} ${isDarkMode ? '' : 'bg-darker-blue'}`} style={isDarkMode ? { backgroundColor: '#181A1B' } : {}}>
+        <div className="flex items-center ">
+          <img src="/logo.svg" alt="Marky Logo" className="w-10 h-10 " />
+          <h3 onClick={handleHomeOnClick} className="font-bold text-m dark:text-white">
+            Marky
+          </h3>
         </div>
+        <button onClick={() => setShowSettings(true)}>
+          <Settings size={20} className="cursor-pointer hover:text-gray-300 dark:text-white" />
+        </button>
       </div>
 
       {/* Settings Modal */}

@@ -23,10 +23,9 @@ body,
 
 /* Add these new styles */
 .w-md-editor {
-  overflow: hidden !important;
   height: 96% !important;
+  overflow: visible !important;
 }
-
 
 .w-md-editor-text-pre > code,
 .w-md-editor-text-input {
@@ -34,11 +33,14 @@ body,
   overflow: auto !important;
 }
 
-.custom-md-editor {
-  height: 95% !important;
-  overflow: hidden !important;
+.w-md-editor-text-input textarea {
+  overflow: auto !important;
+  height: 100% !important;
 }
 
+.custom-md-editor {
+  overflow: visible !important;
+}
 
 /* Fix preview mode scrolling */
 .w-md-editor-preview {
@@ -108,7 +110,6 @@ body,
   display: block !important;
   margin-left: auto !important;
   margin-right: auto !important;
-  max-width: 100% !important;
   border-radius: 5px !important;
   padding-bottom: 15px;
 }
